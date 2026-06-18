@@ -1,40 +1,31 @@
+import { AddButton } from "@/components/AddButton";
+import { TodoList } from "@/components/TodoList";
+
+/**
+ * 画面表示用の仮データです。
+ * 将来APIやDBに置き換える場合は、この配列を取得処理に差し替えます。
+ */
 const todos = [
   { id: 1, title: "筋トレ", completed: false },
   { id: 2, title: "散歩", completed: false },
   { id: 3, title: "買い物", completed: true },
 ];
 
+/**
+ * TODO一覧ページを表示するNext.jsのページコンポーネントです。
+ * @returns {JSX.Element} TODO一覧ページの表示
+ */
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-100 px-4 py-8">
       <div className="mx-auto max-w-md">
         <h1 className="mb-6 text-3xl font-bold text-gray-900">すべて</h1>
 
-        <div className="rounded-2xl bg-white shadow-sm">
-          {todos.map((todo) => (
-            <div
-              key={todo.id}
-              className="flex items-center gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0"
-            >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-300">
-                {todo.completed ? "✓" : ""}
-              </span>
-              <span
-                className={
-                  todo.completed
-                    ? "text-gray-400 line-through"
-                    : "text-gray-900"
-                }
-              >
-                {todo.title}
-              </span>
-            </div>
-          ))}
-        </div>
+        {/* Homeは画面の組み立てだけを担当し、TODOの表示詳細はTodoList側に任せる。 */}
+        <TodoList todos={todos} />
 
-        <button className="mt-6 text-lg font-semibold text-blue-500">
-          ＋ 追加
-        </button>
+        {/* 追加操作の見た目だけを配置。実際の追加ロジックはAddButton側で拡張する。 */}
+        <AddButton />
       </div>
     </main>
   );
