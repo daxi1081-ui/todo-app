@@ -42,3 +42,7 @@ next-env.d.ts
 
 # 個人用メモ
 開発手順（忘備録）.md
+
+# サーバーログ
+dev-server.log
+dev-server.err.log

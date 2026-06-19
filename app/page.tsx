@@ -1,11 +1,11 @@
 import { AddButton } from "./components/AddButton";
-import { TodoList } from "./components/TodoList";
+import { TodoList, type Todo } from "./components/TodoList";
 
 /**
  * 画面表示用の仮データです。
  * 将来APIやDBに置き換える場合は、この配列を取得処理に差し替えます。
  */
-const todos = [
+const todos: Todo[] = [
   { id: 1, title: "筋トレ", completed: false },
   { id: 2, title: "散歩", completed: false },
   { id: 3, title: "買い物", completed: true },

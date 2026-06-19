@@ -1,6 +1,6 @@
 import { TodoItem } from "./TodoItem";
 
-type Todo = {
+export type Todo = {
   /** Reactのkeyに使うため、一覧内で重複しない値にする。 */
   id: number;
   /** 表示するTODO名。 */
