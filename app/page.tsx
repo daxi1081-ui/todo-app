@@ -1,5 +1,5 @@
-import { AddButton } from "@/components/AddButton";
-import { TodoList } from "@/components/TodoList";
+import { AddButton } from "./components/AddButton";
+import { TodoList } from "./components/TodoList";
 
 /**
  * 画面表示用の仮データです。
