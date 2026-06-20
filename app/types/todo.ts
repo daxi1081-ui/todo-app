@@ -6,3 +6,5 @@ export type Todo = {
   /** 完了済みかどうか。 */
   completed: boolean;
 };
+
+export type TodoFilter = "all" | "active" | "completed";
