@@ -35,6 +35,16 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
+   * 指定したTODOを一覧から削除します。
+   * @param {number} id 削除するTODOのID
+   */
+  function deleteTodo(id: number) {
+    setTodoItems((currentTodos) =>
+      currentTodos.filter((todo) => todo.id !== id),
+    );
+  }
+
+  /**
    * 現在のTODO一覧から、画面内で使う簡易的なIDを作成します。
    * @param {Todo[]} currentTodos 現在表示しているTODO配列
    * @returns {number} 新しいTODOに付与するID
@@ -80,6 +90,7 @@ export function TodoList({ todos }: TodoListProps) {
             title={todo.title}
             completed={todo.completed}
             onToggle={() => toggleTodoCompleted(todo.id)}
+            onDelete={() => deleteTodo(todo.id)}
           />
         ))}
       </div>

@@ -5,6 +5,8 @@ type TodoItemProps = {
   completed: boolean;
   /** 完了状態を切り替える処理。 */
   onToggle: () => void;
+  /** TODOを削除する処理。 */
+  onDelete: () => void;
 };
 
 /**
@@ -13,9 +15,10 @@ type TodoItemProps = {
  * @param {string} props.title 表示するTODO名
  * @param {boolean} props.completed 完了済みかどうか
  * @param {() => void} props.onToggle 完了状態を切り替える処理
+ * @param {() => void} props.onDelete TODOを削除する処理
  * @returns {JSX.Element} TODO1件分の表示
  */
-export function TodoItem({ title, completed, onToggle }: TodoItemProps) {
+export function TodoItem({ title, completed, onToggle, onDelete }: TodoItemProps) {
   return (
     <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0">
       <button
@@ -32,6 +35,15 @@ export function TodoItem({ title, completed, onToggle }: TodoItemProps) {
         <span className={completed ? "text-gray-400 line-through" : "text-gray-900"}>
           {title}
         </span>
+      </button>
+
+      <button
+        type="button"
+        className="text-sm font-semibold text-red-400 hover:text-red-500"
+        aria-label={`${title}を削除する`}
+        onClick={onDelete}
+      >
+        削除
       </button>
     </div>
   );
