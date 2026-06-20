@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import type { FormEvent } from "react";
 
+import { AddButton } from "./AddButton";
 import { TodoItem } from "./TodoItem";
 import type { Todo } from "../types/todo";
 
@@ -18,6 +20,7 @@ type TodoListProps = {
  */
 export function TodoList({ todos }: TodoListProps) {
   const [todoItems, setTodoItems] = useState<Todo[]>(todos);
+  const [newTodoTitle, setNewTodoTitle] = useState("");
 
   /**
    * 指定したTODOの完了状態を反転します。
@@ -31,16 +34,70 @@ export function TodoList({ todos }: TodoListProps) {
     );
   }
 
+  /**
+   * 現在のTODO一覧から、画面内で使う簡易的なIDを作成します。
+   * @param {Todo[]} currentTodos 現在表示しているTODO配列
+   * @returns {number} 新しいTODOに付与するID
+   */
+  function createTodoId(currentTodos: Todo[]) {
+    if (currentTodos.length === 0) {
+      return 1;
+    }
+
+    return Math.max(...currentTodos.map((todo) => todo.id)) + 1;
+  }
+
+  /**
+   * 入力されたタイトルで未完了のTODOを追加します。
+   * @param {FormEvent<HTMLFormElement>} event フォーム送信イベント
+   */
+  function addTodo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const title = newTodoTitle.trim();
+
+    if (title.length === 0) {
+      return;
+    }
+
+    setTodoItems((currentTodos) => [
+      ...currentTodos,
+      {
+        id: createTodoId(currentTodos),
+        title,
+        completed: false,
+      },
+    ]);
+    setNewTodoTitle("");
+  }
+
   return (
-    <div className="rounded-2xl bg-white shadow-sm">
-      {todoItems.map((todo) => (
-        <TodoItem
-          key={todo.id}
-          title={todo.title}
-          completed={todo.completed}
-          onToggle={() => toggleTodoCompleted(todo.id)}
+    <>
+      <div className="rounded-2xl bg-white shadow-sm">
+        {todoItems.map((todo) => (
+          <TodoItem
+            key={todo.id}
+            title={todo.title}
+            completed={todo.completed}
+            onToggle={() => toggleTodoCompleted(todo.id)}
+          />
+        ))}
+      </div>
+
+      <form onSubmit={addTodo} className="mt-6">
+        <label htmlFor="new-todo-title" className="sr-only">
+          追加するTODO
+        </label>
+        <input
+          id="new-todo-title"
+          type="text"
+          value={newTodoTitle}
+          onChange={(event) => setNewTodoTitle(event.target.value)}
+          placeholder="新しいTODO"
+          className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none placeholder:text-gray-400 focus:border-blue-400"
         />
-      ))}
-    </div>
+        <AddButton disabled={newTodoTitle.trim().length === 0} />
+      </form>
+    </>
   );
 }

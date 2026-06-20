@@ -1,4 +1,3 @@
-import { AddButton } from "./components/AddButton";
 import { TodoList } from "./components/TodoList";
 import type { Todo } from "./types/todo";
 
@@ -25,8 +24,6 @@ export default function Home() {
         {/* Homeは画面の組み立てだけを担当し、TODOの表示詳細はTodoList側に任せる。 */}
         <TodoList todos={todos} />
 
-        {/* 追加操作の見た目だけを配置。実際の追加ロジックはAddButton側で拡張する。 */}
-        <AddButton />
       </div>
     </main>
   );
