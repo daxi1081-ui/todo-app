@@ -1,5 +1,6 @@
 import { AddButton } from "./components/AddButton";
-import { TodoList, type Todo } from "./components/TodoList";
+import { TodoList } from "./components/TodoList";
+import type { Todo } from "./types/todo";
 
 /**
  * 画面表示用の仮データです。
