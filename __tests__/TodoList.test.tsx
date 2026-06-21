@@ -99,3 +99,74 @@ test("Todo を削除できる", () => {
   expect(screen.queryByText("散歩")).toBeNull();
   expect(screen.getByText("買い物")).toBeDefined();
 });
+
+test("Todo を編集できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("編集タイトル"), {
+    target: { value: "朝の筋トレ" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "保存" }));
+
+  expect(screen.getByText("朝の筋トレ")).toBeDefined();
+  expect(screen.queryByText("筋トレ")).toBeNull();
+});
+
+test("編集をキャンセルすると元のタイトルに戻る", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("編集タイトル"), {
+    target: { value: "朝の筋トレ" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "キャンセル" }));
+
+  expect(screen.getByText("筋トレ")).toBeDefined();
+  expect(screen.queryByText("朝の筋トレ")).toBeNull();
+});
+
+test("空文字では保存されない", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("編集タイトル"), {
+    target: { value: "   " },
+  });
+
+  const saveButton = screen.getByRole("button", { name: "保存" });
+
+  expect((saveButton as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(saveButton);
+
+  expect(screen.getByLabelText("編集タイトル")).toBeDefined();
+  expect(screen.queryByText("   ")).toBeNull();
+});
+
+test("編集後も完了切り替えが動作する", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("編集タイトル"), {
+    target: { value: "朝の筋トレ" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "保存" }));
+  fireEvent.click(screen.getByText("朝の筋トレ"));
+
+  expect(screen.getAllByLabelText("未完了に戻す")).toHaveLength(2);
+});
+
+test("編集後も削除が動作する", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "散歩を編集する" }));
+  fireEvent.change(screen.getByLabelText("編集タイトル"), {
+    target: { value: "夕方の散歩" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "保存" }));
+  fireEvent.click(screen.getByRole("button", { name: "夕方の散歩を削除する" }));
+
+  expect(screen.queryByText("夕方の散歩")).toBeNull();
+  expect(screen.getByText("筋トレ")).toBeDefined();
+  expect(screen.getByText("買い物")).toBeDefined();
+});

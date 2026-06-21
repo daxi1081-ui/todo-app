@@ -37,7 +37,7 @@ function filterTodos(todos: Todo[], filter: TodoFilter) {
 }
 
 /**
- * TODO 配列を一覧として表示し、追加・完了切り替え・削除・表示フィルタを管理するコンポーネントです。
+ * TODO 配列を一覧として表示し、追加・完了切り替え・削除・編集・表示フィルタを管理するコンポーネントです。
  * @param {TodoListProps} props TODO 一覧の表示に必要な情報
  * @param {Todo[]} props.todos 表示する TODO の初期配列
  * @returns {JSX.Element} TODO 一覧
@@ -57,6 +57,25 @@ export function TodoList({ todos }: TodoListProps) {
     setTodoItems((currentTodos) =>
       currentTodos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo,
+      ),
+    );
+  }
+
+  /**
+   * 指定した TODO のタイトルを更新します。
+   * @param {number} id タイトルを更新する TODO の ID
+   * @param {string} title 更新後のタイトル
+   */
+  function updateTodoTitle(id: number, title: string) {
+    const trimmedTitle = title.trim();
+
+    if (trimmedTitle.length === 0) {
+      return;
+    }
+
+    setTodoItems((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === id ? { ...todo, title: trimmedTitle } : todo,
       ),
     );
   }
@@ -140,6 +159,7 @@ export function TodoList({ todos }: TodoListProps) {
             completed={todo.completed}
             onToggle={() => toggleTodoCompleted(todo.id)}
             onDelete={() => deleteTodo(todo.id)}
+            onUpdateTitle={(title) => updateTodoTitle(todo.id, title)}
           />
         ))}
       </div>
