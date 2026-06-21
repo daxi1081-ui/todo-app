@@ -22,7 +22,7 @@ test("初期状態では全件表示される", () => {
   expect(screen.getByText("買い物")).toBeDefined();
 });
 
-test("未完了を選ぶと未完了Todoだけ表示される", () => {
+test("未完了を選ぶと未完了 Todo だけ表示される", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "未完了" }));
@@ -32,7 +32,7 @@ test("未完了を選ぶと未完了Todoだけ表示される", () => {
   expect(screen.queryByText("買い物")).toBeNull();
 });
 
-test("完了済みを選ぶと完了済みTodoだけ表示される", () => {
+test("完了済みを選ぶと完了済み Todo だけ表示される", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "完了済み" }));
@@ -53,13 +53,28 @@ test("すべてに戻すと全件表示される", () => {
   expect(screen.getByText("買い物")).toBeDefined();
 });
 
-test("Todoを追加できる", () => {
+test("選択中のフィルタが aria-pressed で分かる", () => {
   render(<TodoList todos={todos} />);
 
-  const input = screen.getByLabelText("追加するTODO") as HTMLInputElement;
+  const allFilterButton = screen.getByRole("button", { name: "すべて" });
+  const activeFilterButton = screen.getByRole("button", { name: "未完了" });
+
+  expect(allFilterButton.getAttribute("aria-pressed")).toBe("true");
+  expect(activeFilterButton.getAttribute("aria-pressed")).toBe("false");
+
+  fireEvent.click(activeFilterButton);
+
+  expect(allFilterButton.getAttribute("aria-pressed")).toBe("false");
+  expect(activeFilterButton.getAttribute("aria-pressed")).toBe("true");
+});
+
+test("Todo を追加できる", () => {
+  render(<TodoList todos={todos} />);
+
+  const input = screen.getByLabelText("追加する TODO") as HTMLInputElement;
 
   fireEvent.change(input, { target: { value: "読書" } });
-  fireEvent.click(screen.getByRole("button", { name: "＋ 追加" }));
+  fireEvent.click(screen.getByRole("button", { name: "追加" }));
 
   expect(screen.getByText("読書")).toBeDefined();
   expect(input.value).toBe("");
@@ -75,7 +90,7 @@ test("完了状態を切り替えられる", () => {
   expect(screen.getAllByLabelText("未完了に戻す")).toHaveLength(2);
 });
 
-test("Todoを削除できる", () => {
+test("Todo を削除できる", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "散歩を削除する" }));

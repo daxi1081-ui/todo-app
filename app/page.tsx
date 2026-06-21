@@ -3,7 +3,7 @@ import type { Todo } from "./types/todo";
 
 /**
  * 画面表示用の仮データです。
- * 将来APIやDBに置き換える場合は、この配列を取得処理に差し替えます。
+ * 将来 API や DB に置き換える場合は、この配列を取得処理に差し替えます。
  */
 const todos: Todo[] = [
   { id: 1, title: "筋トレ", completed: false },
@@ -12,18 +12,16 @@ const todos: Todo[] = [
 ];
 
 /**
- * TODO一覧ページを表示するNext.jsのページコンポーネントです。
- * @returns {JSX.Element} TODO一覧ページの表示
+ * TODO 一覧ページを表示する Next.js のページコンポーネントです。
+ * @returns {JSX.Element} TODO 一覧ページ
  */
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-100 px-4 py-8">
       <div className="mx-auto max-w-md">
-        <h1 className="mb-6 text-3xl font-bold text-gray-900">すべて</h1>
+        <h1 className="mb-6 text-3xl font-bold text-gray-900">TODO</h1>
 
-        {/* Homeは画面の組み立てだけを担当し、TODOの表示詳細はTodoList側に任せる。 */}
         <TodoList todos={todos} />
-
       </div>
     </main>
   );

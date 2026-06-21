@@ -1,22 +1,22 @@
 type TodoItemProps = {
-  /** 一覧から渡されたTODO名。表示専用なので、このコンポーネント内では更新しない。 */
+  /** 一覧に表示する Todo 名。 */
   title: string;
-  /** 完了済みかどうか。チェック表示と取り消し線の有無を切り替える。 */
+  /** 完了済みかどうか。 */
   completed: boolean;
   /** 完了状態を切り替える処理。 */
   onToggle: () => void;
-  /** TODOを削除する処理。 */
+  /** Todo を削除する処理。 */
   onDelete: () => void;
 };
 
 /**
- * TODOを1件分表示するコンポーネントです。
- * @param {TodoItemProps} props TODO表示に必要な情報
- * @param {string} props.title 表示するTODO名
+ * TODO を 1 件分表示するコンポーネントです。
+ * @param {TodoItemProps} props TODO 表示に必要な情報
+ * @param {string} props.title 表示する TODO 名
  * @param {boolean} props.completed 完了済みかどうか
  * @param {() => void} props.onToggle 完了状態を切り替える処理
- * @param {() => void} props.onDelete TODOを削除する処理
- * @returns {JSX.Element} TODO1件分の表示
+ * @param {() => void} props.onDelete TODO を削除する処理
+ * @returns {JSX.Element} TODO 1 件分の表示
  */
 export function TodoItem({ title, completed, onToggle, onDelete }: TodoItemProps) {
   return (
