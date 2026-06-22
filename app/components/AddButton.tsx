@@ -1,19 +1,20 @@
 type AddButtonProps = {
-  /** ボタンを押せるかどうか。 */
+  /** ボタンを無効化するかどうか。 */
   disabled?: boolean;
 };
 
 /**
- * TODO 追加用の送信ボタンを表示するコンポーネントです。
- * @param {AddButtonProps} props ボタン表示に必要な情報
- * @param {boolean} props.disabled ボタンを無効化するかどうか
- * @returns {JSX.Element} TODO 追加ボタン
+ * Todo 追加用の送信ボタンを表示します。
+ *
+ * @param props ボタン表示に必要な情報。
+ * @param props.disabled ボタンを無効化するかどうか。
+ * @returns Todo 追加ボタン。
  */
 export function AddButton({ disabled = false }: AddButtonProps) {
   return (
     <button
       type="submit"
-      className="mt-6 text-lg font-semibold text-blue-500 disabled:cursor-not-allowed disabled:text-gray-300"
+      className="rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
       disabled={disabled}
     >
       追加

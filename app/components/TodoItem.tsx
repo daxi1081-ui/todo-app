@@ -1,10 +1,10 @@
 "use client";
 
-import { useId, useState } from "react";
-import type { FormEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 
 type TodoItemProps = {
-  /** 一覧に表示する Todo 名。 */
+  /** 一覧に表示する Todo タイトル。 */
   title: string;
   /** 完了済みかどうか。 */
   completed: boolean;
@@ -12,19 +12,20 @@ type TodoItemProps = {
   onToggle: () => void;
   /** Todo を削除する処理。 */
   onDelete: () => void;
-  /** Todo 名を更新する処理。 */
+  /** Todo タイトルを更新する処理。 */
   onUpdateTitle: (title: string) => void;
 };
 
 /**
- * TODO を 1 件分表示し、タイトル編集も扱うコンポーネントです。
- * @param {TodoItemProps} props TODO 表示に必要な情報
- * @param {string} props.title 表示する TODO 名
- * @param {boolean} props.completed 完了済みかどうか
- * @param {() => void} props.onToggle 完了状態を切り替える処理
- * @param {() => void} props.onDelete TODO を削除する処理
- * @param {(title: string) => void} props.onUpdateTitle TODO 名を更新する処理
- * @returns {JSX.Element} TODO 1 件分の表示
+ * Todo を 1 件分表示し、完了切り替え、編集、削除を扱います。
+ *
+ * @param props Todo 表示に必要な情報。
+ * @param props.title 表示する Todo タイトル。
+ * @param props.completed 完了済みかどうか。
+ * @param props.onToggle 完了状態を切り替える処理。
+ * @param props.onDelete Todo を削除する処理。
+ * @param props.onUpdateTitle Todo タイトルを更新する処理。
+ * @returns Todo 1 件分の表示。
  */
 export function TodoItem({
   title,
@@ -34,9 +35,19 @@ export function TodoItem({
   onUpdateTitle,
 }: TodoItemProps) {
   const editInputId = useId();
+  const editInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState(title);
   const trimmedEditingTitle = editingTitle.trim();
+
+  useEffect(() => {
+    if (!isEditing) {
+      return;
+    }
+
+    editInputRef.current?.focus();
+    editInputRef.current?.select();
+  }, [isEditing]);
 
   /**
    * 編集モードを開始し、現在のタイトルを入力欄に反映します。
@@ -56,7 +67,8 @@ export function TodoItem({
 
   /**
    * 空文字でない場合だけ編集内容を保存します。
-   * @param {FormEvent<HTMLFormElement>} event フォーム送信イベント
+   *
+   * @param event フォーム送信イベント。
    */
   function saveEditing(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,11 +81,29 @@ export function TodoItem({
     setIsEditing(false);
   }
 
+  /**
+   * 編集中の Enter キー入力で保存し、Esc キー入力でキャンセルします。
+   *
+   * @param event キーボード入力イベント。
+   */
+  function handleEditKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      cancelEditing();
+    }
+  }
+
   return (
     <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0">
       <button
         type="button"
-        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gray-300 text-sm font-bold text-blue-600 transition hover:border-blue-400"
         aria-label={completed ? "未完了に戻す" : "完了にする"}
         aria-pressed={completed}
         onClick={onToggle}
@@ -84,25 +114,27 @@ export function TodoItem({
       {isEditing ? (
         <form className="flex min-w-0 flex-1 items-center gap-2" onSubmit={saveEditing}>
           <label htmlFor={editInputId} className="sr-only">
-            編集タイトル
+            Todo タイトルを編集
           </label>
           <input
+            ref={editInputRef}
             id={editInputId}
             type="text"
             value={editingTitle}
             onChange={(event) => setEditingTitle(event.target.value)}
-            className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-400"
+            onKeyDown={handleEditKeyDown}
+            className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
           />
           <button
             type="submit"
-            className="text-sm font-semibold text-blue-500 disabled:cursor-not-allowed disabled:text-gray-300"
+            className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
             disabled={trimmedEditingTitle.length === 0}
           >
             保存
           </button>
           <button
             type="button"
-            className="text-sm font-semibold text-gray-500 hover:text-gray-700"
+            className="rounded-md px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
             onClick={cancelEditing}
           >
             キャンセル
@@ -124,7 +156,7 @@ export function TodoItem({
 
           <button
             type="button"
-            className="text-sm font-semibold text-blue-500 hover:text-blue-600"
+            className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
             aria-label={`${title}を編集する`}
             onClick={startEditing}
           >
@@ -135,7 +167,7 @@ export function TodoItem({
 
       <button
         type="button"
-        className="text-sm font-semibold text-red-400 hover:text-red-500"
+        className="rounded-md px-3 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600"
         aria-label={`${title}を削除する`}
         onClick={onDelete}
       >

@@ -53,7 +53,7 @@ test("すべてに戻すと全件表示される", () => {
   expect(screen.getByText("買い物")).toBeDefined();
 });
 
-test("選択中のフィルタが aria-pressed で分かる", () => {
+test("選択中のフィルタは aria-pressed で分かる", () => {
   render(<TodoList todos={todos} />);
 
   const allFilterButton = screen.getByRole("button", { name: "すべて" });
@@ -71,13 +71,40 @@ test("選択中のフィルタが aria-pressed で分かる", () => {
 test("Todo を追加できる", () => {
   render(<TodoList todos={todos} />);
 
-  const input = screen.getByLabelText("追加する TODO") as HTMLInputElement;
+  const input = screen.getByLabelText("追加する Todo") as HTMLInputElement;
 
   fireEvent.change(input, { target: { value: "読書" } });
   fireEvent.click(screen.getByRole("button", { name: "追加" }));
 
   expect(screen.getByText("読書")).toBeDefined();
   expect(input.value).toBe("");
+});
+
+test("Todo 追加時に Enter キーで追加できる", () => {
+  render(<TodoList todos={todos} />);
+
+  const input = screen.getByLabelText("追加する Todo") as HTMLInputElement;
+
+  fireEvent.change(input, { target: { value: "日記を書く" } });
+  fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+  expect(screen.getByText("日記を書く")).toBeDefined();
+  expect(input.value).toBe("");
+});
+
+test("空文字では Todo を追加できない", () => {
+  render(<TodoList todos={todos} />);
+
+  const input = screen.getByLabelText("追加する Todo") as HTMLInputElement;
+  const addButton = screen.getByRole("button", { name: "追加" }) as HTMLButtonElement;
+
+  fireEvent.change(input, { target: { value: "   " } });
+
+  expect(addButton.disabled).toBe(true);
+  fireEvent.submit(input.closest("form") as HTMLFormElement);
+
+  expect(screen.queryByText("   ")).toBeNull();
+  expect(screen.getAllByRole("button", { name: /を削除する$/ })).toHaveLength(3);
 });
 
 test("完了状態を切り替えられる", () => {
@@ -104,7 +131,7 @@ test("Todo を編集できる", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
-  fireEvent.change(screen.getByLabelText("編集タイトル"), {
+  fireEvent.change(screen.getByLabelText("Todo タイトルを編集"), {
     target: { value: "朝の筋トレ" },
   });
   fireEvent.click(screen.getByRole("button", { name: "保存" }));
@@ -117,7 +144,7 @@ test("編集をキャンセルすると元のタイトルに戻る", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
-  fireEvent.change(screen.getByLabelText("編集タイトル"), {
+  fireEvent.change(screen.getByLabelText("Todo タイトルを編集"), {
     target: { value: "朝の筋トレ" },
   });
   fireEvent.click(screen.getByRole("button", { name: "キャンセル" }));
@@ -126,28 +153,56 @@ test("編集をキャンセルすると元のタイトルに戻る", () => {
   expect(screen.queryByText("朝の筋トレ")).toBeNull();
 });
 
-test("空文字では保存されない", () => {
+test("空文字では編集内容を保存できない", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
-  fireEvent.change(screen.getByLabelText("編集タイトル"), {
+  fireEvent.change(screen.getByLabelText("Todo タイトルを編集"), {
     target: { value: "   " },
   });
 
-  const saveButton = screen.getByRole("button", { name: "保存" });
+  const saveButton = screen.getByRole("button", { name: "保存" }) as HTMLButtonElement;
 
-  expect((saveButton as HTMLButtonElement).disabled).toBe(true);
-  fireEvent.click(saveButton);
+  expect(saveButton.disabled).toBe(true);
+  fireEvent.submit(saveButton.closest("form") as HTMLFormElement);
 
-  expect(screen.getByLabelText("編集タイトル")).toBeDefined();
+  expect(screen.getByLabelText("Todo タイトルを編集")).toBeDefined();
   expect(screen.queryByText("   ")).toBeNull();
+});
+
+test("Todo 編集時に Enter キーで保存できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+
+  const input = screen.getByLabelText("Todo タイトルを編集") as HTMLInputElement;
+
+  fireEvent.change(input, { target: { value: "夜の筋トレ" } });
+  fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+  expect(screen.getByText("夜の筋トレ")).toBeDefined();
+  expect(screen.queryByText("筋トレ")).toBeNull();
+});
+
+test("Todo 編集時に Esc キーでキャンセルできる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+
+  const input = screen.getByLabelText("Todo タイトルを編集");
+
+  fireEvent.change(input, { target: { value: "夜の筋トレ" } });
+  fireEvent.keyDown(input, { key: "Escape", code: "Escape" });
+
+  expect(screen.getByText("筋トレ")).toBeDefined();
+  expect(screen.queryByText("夜の筋トレ")).toBeNull();
 });
 
 test("編集後も完了切り替えが動作する", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
-  fireEvent.change(screen.getByLabelText("編集タイトル"), {
+  fireEvent.change(screen.getByLabelText("Todo タイトルを編集"), {
     target: { value: "朝の筋トレ" },
   });
   fireEvent.click(screen.getByRole("button", { name: "保存" }));
@@ -160,7 +215,7 @@ test("編集後も削除が動作する", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "散歩を編集する" }));
-  fireEvent.change(screen.getByLabelText("編集タイトル"), {
+  fireEvent.change(screen.getByLabelText("Todo タイトルを編集"), {
     target: { value: "夕方の散歩" },
   });
   fireEvent.click(screen.getByRole("button", { name: "保存" }));

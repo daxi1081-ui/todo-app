@@ -1,9 +1,9 @@
 export type Todo = {
-  /** React の key に使うため、一覧内で重複しない値にする。 */
+  /** React の key に使う、一意な Todo ID。 */
   id: number;
-  /** 表示する Todo 名。 */
+  /** 画面に表示する Todo タイトル。 */
   title: string;
-  /** 完了済みかどうか。 */
+  /** Todo が完了済みかどうか。 */
   completed: boolean;
 };
 
