@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
 import { AddButton } from "./AddButton";
@@ -17,6 +17,71 @@ const filterOptions: TodoFilterOption[] = [
   { label: "未完了", value: "active" },
   { label: "完了済み", value: "completed" },
 ];
+
+const todoStorageKey = "todo-app.todos";
+
+/**
+ * localStorage に保存できる Todo 形式かどうかを判定します。
+ *
+ * @param value 判定する値。
+ * @returns Todo として扱える場合は true。
+ */
+function isTodo(value: unknown): value is Todo {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const todo = value as Partial<Todo>;
+
+  return (
+    typeof todo.id === "number" &&
+    typeof todo.title === "string" &&
+    typeof todo.completed === "boolean"
+  );
+}
+
+/**
+ * localStorage から Todo 一覧を読み込みます。
+ *
+ * @param fallbackTodos 保存データが使えない場合に表示する初期 Todo 一覧。
+ * @returns 復元した Todo 一覧、または初期 Todo 一覧。
+ */
+function loadTodosFromStorage(fallbackTodos: Todo[]) {
+  if (typeof window === "undefined") {
+    return fallbackTodos;
+  }
+
+  const storedTodos = window.localStorage.getItem(todoStorageKey);
+
+  if (storedTodos === null) {
+    return fallbackTodos;
+  }
+
+  try {
+    const parsedTodos: unknown = JSON.parse(storedTodos);
+
+    if (!Array.isArray(parsedTodos) || !parsedTodos.every(isTodo)) {
+      return fallbackTodos;
+    }
+
+    return parsedTodos;
+  } catch {
+    return fallbackTodos;
+  }
+}
+
+/**
+ * Todo 一覧を localStorage に保存します。
+ *
+ * @param todos 保存する Todo 一覧。
+ */
+function saveTodosToStorage(todos: Todo[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(todoStorageKey, JSON.stringify(todos));
+}
 
 /**
  * Todo 一覧を選択中のフィルタに合わせて絞り込みます。
@@ -45,11 +110,17 @@ function filterTodos(todos: Todo[], filter: TodoFilter) {
  * @returns Todo 一覧。
  */
 export function TodoList({ todos }: TodoListProps) {
-  const [todoItems, setTodoItems] = useState<Todo[]>(todos);
+  const [todoItems, setTodoItems] = useState<Todo[]>(() =>
+    loadTodosFromStorage(todos),
+  );
   const [newTodoTitle, setNewTodoTitle] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<TodoFilter>("all");
 
   const filteredTodoItems = filterTodos(todoItems, selectedFilter);
+
+  useEffect(() => {
+    saveTodosToStorage(todoItems);
+  }, [todoItems]);
 
   /**
    * 指定した Todo の完了状態を反転します。
