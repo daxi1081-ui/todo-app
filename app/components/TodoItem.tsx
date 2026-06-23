@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
+import { parseTags } from "../utils/tags";
 import type { TodoPriority, TodoPriorityOption } from "../types/todo";
 
 type TodoItemProps = {
@@ -53,23 +54,6 @@ function formatDueDate(dueDate: string) {
  */
 function getPriorityLabel(priority: TodoPriority, options: TodoPriorityOption[]) {
   return options.find((option) => option.value === priority)?.label ?? "なし";
-}
-
-/**
- * タグ入力を Todo に保存するタグ一覧へ変換します。
- *
- * @param value カンマ区切りのタグ入力。
- * @returns 空文字と重複を取り除いたタグ一覧。
- */
-function parseTags(value: string) {
-  return Array.from(
-    new Set(
-      value
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0),
-    ),
-  );
 }
 
 /**
@@ -332,7 +316,7 @@ export function TodoItem({
                         : "inline-flex rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"
                     }
                   >
-                    #{tag}
+                    {tag}
                   </span>
                 ))}
               </span>

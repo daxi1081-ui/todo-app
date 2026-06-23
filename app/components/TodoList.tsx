@@ -5,6 +5,7 @@ import type { FormEvent, KeyboardEvent } from "react";
 
 import { AddButton } from "./AddButton";
 import { TodoItem } from "./TodoItem";
+import { normalizeTag, parseTags } from "../utils/tags";
 import type {
   Todo,
   TodoFilter,
@@ -86,23 +87,6 @@ function toDateInputValue(date: Date) {
 }
 
 /**
- * タグ入力を Todo に保存するタグ一覧へ変換します。
- *
- * @param value カンマ区切りのタグ入力。
- * @returns 空文字と重複を取り除いたタグ一覧。
- */
-function parseTags(value: string) {
-  return Array.from(
-    new Set(
-      value
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0),
-    ),
-  );
-}
-
-/**
  * 保存済み Todo を現在の Todo 型に整えます。
  *
  * @param value 判定する値。
@@ -130,7 +114,10 @@ function normalizeStoredTodo(value: unknown): Todo | null {
     dueDate: typeof todo.dueDate === "string" ? todo.dueDate : "",
     priority: isTodoPriority(todo.priority) ? todo.priority : "none",
     tags: Array.isArray(todo.tags)
-      ? todo.tags.filter((tag): tag is string => typeof tag === "string")
+      ? todo.tags
+          .filter((tag): tag is string => typeof tag === "string")
+          .map(normalizeTag)
+          .filter((tag) => tag.length > 0)
       : [],
     completed: todo.completed,
   };
