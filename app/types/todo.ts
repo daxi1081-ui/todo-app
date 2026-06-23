@@ -9,6 +9,8 @@ export type Todo = {
   dueDate: string;
   /** Todo の優先度。 */
   priority: TodoPriority;
+  /** Todo に付けるタグ一覧。 */
+  tags: string[];
   /** Todo が完了済みかどうか。 */
   completed: boolean;
 };

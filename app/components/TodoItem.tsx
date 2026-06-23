@@ -14,6 +14,8 @@ type TodoItemProps = {
   dueDate: string;
   /** 一覧に表示する Todo 優先度。 */
   priority: TodoPriority;
+  /** 一覧に表示する Todo タグ一覧。 */
+  tags: string[];
   /** 優先度の選択肢。 */
   priorityOptions: TodoPriorityOption[];
   /** 完了済みかどうか。 */
@@ -28,6 +30,7 @@ type TodoItemProps = {
     memo: string,
     dueDate: string,
     priority: TodoPriority,
+    tags: string[],
   ) => void;
 };
 
@@ -53,6 +56,23 @@ function getPriorityLabel(priority: TodoPriority, options: TodoPriorityOption[])
 }
 
 /**
+ * タグ入力を Todo に保存するタグ一覧へ変換します。
+ *
+ * @param value カンマ区切りのタグ入力。
+ * @returns 空文字と重複を取り除いたタグ一覧。
+ */
+function parseTags(value: string) {
+  return Array.from(
+    new Set(
+      value
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0),
+    ),
+  );
+}
+
+/**
  * Todo を 1 件分表示し、完了切り替え、編集、削除を扱います。
  *
  * @param props Todo 表示に必要な情報。
@@ -60,6 +80,7 @@ function getPriorityLabel(priority: TodoPriority, options: TodoPriorityOption[])
  * @param props.memo 表示する Todo メモ。
  * @param props.dueDate 表示する Todo 期限日。
  * @param props.priority 表示する Todo 優先度。
+ * @param props.tags 表示する Todo タグ一覧。
  * @param props.priorityOptions 優先度の選択肢。
  * @param props.completed 完了済みかどうか。
  * @param props.onToggle 完了状態を切り替える処理。
@@ -72,6 +93,7 @@ export function TodoItem({
   memo,
   dueDate,
   priority,
+  tags,
   priorityOptions,
   completed,
   onToggle,
@@ -82,12 +104,14 @@ export function TodoItem({
   const editMemoInputId = useId();
   const editDueDateInputId = useId();
   const editPriorityInputId = useId();
+  const editTagsInputId = useId();
   const editInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState(title);
   const [editingMemo, setEditingMemo] = useState(memo);
   const [editingDueDate, setEditingDueDate] = useState(dueDate);
   const [editingPriority, setEditingPriority] = useState<TodoPriority>(priority);
+  const [editingTags, setEditingTags] = useState(tags.join(", "));
   const trimmedEditingTitle = editingTitle.trim();
   const priorityLabel = getPriorityLabel(priority, priorityOptions);
 
@@ -108,6 +132,7 @@ export function TodoItem({
     setEditingMemo(memo);
     setEditingDueDate(dueDate);
     setEditingPriority(priority);
+    setEditingTags(tags.join(", "));
     setIsEditing(true);
   }
 
@@ -119,6 +144,7 @@ export function TodoItem({
     setEditingMemo(memo);
     setEditingDueDate(dueDate);
     setEditingPriority(priority);
+    setEditingTags(tags.join(", "));
     setIsEditing(false);
   }
 
@@ -134,7 +160,13 @@ export function TodoItem({
       return;
     }
 
-    onUpdateTodo(trimmedEditingTitle, editingMemo.trim(), editingDueDate, editingPriority);
+    onUpdateTodo(
+      trimmedEditingTitle,
+      editingMemo.trim(),
+      editingDueDate,
+      editingPriority,
+      parseTags(editingTags),
+    );
     setIsEditing(false);
   }
 
@@ -217,6 +249,16 @@ export function TodoItem({
               </option>
             ))}
           </select>
+          <label htmlFor={editTagsInputId} className="sr-only">
+            Todo タグを編集
+          </label>
+          <input
+            id={editTagsInputId}
+            type="text"
+            value={editingTags}
+            onChange={(event) => setEditingTags(event.target.value)}
+            className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+          />
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
@@ -277,6 +319,22 @@ export function TodoItem({
                 }
               >
                 優先度: {priorityLabel}
+              </span>
+            ) : null}
+            {tags.length > 0 ? (
+              <span className="mt-2 flex flex-wrap gap-1">
+                {tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className={
+                      completed
+                        ? "inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400"
+                        : "inline-flex rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"
+                    }
+                  >
+                    #{tag}
+                  </span>
+                ))}
               </span>
             ) : null}
           </button>

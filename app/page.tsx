@@ -6,9 +6,33 @@ import type { Todo } from "./types/todo";
  * 将来 API や DB に置き換える場合は、この一覧の取得処理を差し替えます。
  */
 const todos: Todo[] = [
-  { id: 1, title: "筋トレ", memo: "", dueDate: "", priority: "none", completed: false },
-  { id: 2, title: "散歩", memo: "", dueDate: "", priority: "none", completed: false },
-  { id: 3, title: "買い物", memo: "", dueDate: "", priority: "none", completed: true },
+  {
+    id: 1,
+    title: "筋トレ",
+    memo: "",
+    dueDate: "",
+    priority: "none",
+    tags: [],
+    completed: false,
+  },
+  {
+    id: 2,
+    title: "散歩",
+    memo: "",
+    dueDate: "",
+    priority: "none",
+    tags: [],
+    completed: false,
+  },
+  {
+    id: 3,
+    title: "買い物",
+    memo: "",
+    dueDate: "",
+    priority: "none",
+    tags: [],
+    completed: true,
+  },
 ];
 
 /**

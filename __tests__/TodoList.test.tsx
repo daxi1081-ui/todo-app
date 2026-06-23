@@ -27,16 +27,33 @@ const today = createRelativeDateInputValue(0);
 const tomorrow = createRelativeDateInputValue(1);
 
 const todos: Todo[] = [
-  { id: 1, title: "筋トレ", memo: "", dueDate: today, priority: "low", completed: false },
+  {
+    id: 1,
+    title: "筋トレ",
+    memo: "腕立てを20回",
+    dueDate: today,
+    priority: "low",
+    tags: ["健康"],
+    completed: false,
+  },
   {
     id: 2,
     title: "散歩",
-    memo: "",
+    memo: "公園を一周",
     dueDate: tomorrow,
     priority: "high",
+    tags: ["外出"],
     completed: false,
   },
-  { id: 3, title: "買い物", memo: "", dueDate: "", priority: "medium", completed: true },
+  {
+    id: 3,
+    title: "買い物",
+    memo: "",
+    dueDate: "",
+    priority: "medium",
+    tags: ["生活"],
+    completed: true,
+  },
 ];
 
 const todoStorageKey = "todo-app.todos";
@@ -75,6 +92,7 @@ test("localStorage に Todo がある場合、その Todo が表示される", a
         memo: "",
         dueDate: "",
         priority: "none",
+        tags: [],
         completed: false,
       },
     ]),
@@ -233,6 +251,7 @@ test("Todo を追加できる", () => {
   const memoInput = screen.getByLabelText("追加する Todo メモ") as HTMLTextAreaElement;
   const dueDateInput = screen.getByLabelText("追加する Todo 期限日") as HTMLInputElement;
   const priorityInput = screen.getByLabelText("追加する Todo 優先度") as HTMLSelectElement;
+  const tagsInput = screen.getByLabelText("追加する Todo タグ") as HTMLInputElement;
 
   fireEvent.change(input, { target: { value: "読書" } });
   fireEvent.click(screen.getByRole("button", { name: "追加" }));
@@ -242,6 +261,7 @@ test("Todo を追加できる", () => {
   expect(memoInput.value).toBe("");
   expect(dueDateInput.value).toBe("");
   expect(priorityInput.value).toBe("none");
+  expect(tagsInput.value).toBe("");
 });
 
 test("メモ付き Todo を追加できる", () => {
@@ -323,6 +343,22 @@ test("優先度なし Todo も追加できる", async () => {
   });
 });
 
+test("タグ付き Todo を追加できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("追加する Todo タグ"), {
+    target: { value: "学習, 趣味" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "追加" }));
+
+  expect(screen.getByText("読書")).toBeDefined();
+  expect(screen.getByText("#学習")).toBeDefined();
+  expect(screen.getByText("#趣味")).toBeDefined();
+});
+
 test("Todo 追加後に localStorage へ保存される", async () => {
   render(<TodoList todos={todos} />);
 
@@ -390,6 +426,27 @@ test("Todo 追加後に localStorage へ優先度も保存される", async () =
   });
 });
 
+test("Todo 追加後に localStorage へタグも保存される", async () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("追加する Todo タグ"), {
+    target: { value: "学習, 趣味" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "追加" }));
+
+  await waitFor(() => {
+    const storedTodos = JSON.parse(localStorage.getItem(todoStorageKey) ?? "[]") as Todo[];
+
+    expect(storedTodos.find((todo) => todo.title === "読書")?.tags).toEqual([
+      "学習",
+      "趣味",
+    ]);
+  });
+});
+
 test("localStorage からメモも復元できる", async () => {
   localStorage.setItem(
     todoStorageKey,
@@ -426,6 +483,30 @@ test("localStorage から優先度も復元できる", async () => {
   await waitFor(() => {
     expect(screen.getByText("保存済み Todo")).toBeDefined();
     expect(screen.getAllByText("優先度: 高").length).toBeGreaterThan(0);
+  });
+});
+
+test("localStorage からタグも復元できる", async () => {
+  localStorage.setItem(
+    todoStorageKey,
+    JSON.stringify([
+      {
+        id: 10,
+        title: "保存済み Todo",
+        memo: "",
+        dueDate: "",
+        priority: "none",
+        tags: ["保存タグ"],
+        completed: false,
+      },
+    ]),
+  );
+
+  render(<TodoList todos={todos} />);
+
+  await waitFor(() => {
+    expect(screen.getByText("保存済み Todo")).toBeDefined();
+    expect(screen.getByText("#保存タグ")).toBeDefined();
   });
 });
 
@@ -469,6 +550,28 @@ test("priority がない既存データでも画面が壊れない", async () =>
     todoStorageKey,
     JSON.stringify([
       { id: 10, title: "古い Todo", memo: "", dueDate: "", completed: false },
+    ]),
+  );
+
+  render(<TodoList todos={todos} />);
+
+  await waitFor(() => {
+    expect(screen.getByText("古い Todo")).toBeDefined();
+  });
+});
+
+test("tags がない既存データでも画面が壊れない", async () => {
+  localStorage.setItem(
+    todoStorageKey,
+    JSON.stringify([
+      {
+        id: 10,
+        title: "古い Todo",
+        memo: "",
+        dueDate: "",
+        priority: "none",
+        completed: false,
+      },
     ]),
   );
 
@@ -607,6 +710,56 @@ test("優先度を編集できる", () => {
   fireEvent.click(screen.getByRole("button", { name: "保存" }));
 
   expect(screen.getAllByText("優先度: 高").length).toBeGreaterThan(0);
+});
+
+test("タグを編集できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("Todo タグを編集"), {
+    target: { value: "運動, 朝" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "保存" }));
+
+  expect(screen.getByText("#運動")).toBeDefined();
+  expect(screen.getByText("#朝")).toBeDefined();
+  expect(screen.queryByText("#健康")).toBeNull();
+});
+
+test("タイトル検索ができる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("Todo 検索"), {
+    target: { value: "散歩" },
+  });
+
+  expect(screen.queryByText("筋トレ")).toBeNull();
+  expect(screen.getByText("散歩")).toBeDefined();
+  expect(screen.queryByText("買い物")).toBeNull();
+});
+
+test("メモ検索ができる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("Todo 検索"), {
+    target: { value: "公園" },
+  });
+
+  expect(screen.queryByText("筋トレ")).toBeNull();
+  expect(screen.getByText("散歩")).toBeDefined();
+  expect(screen.queryByText("買い物")).toBeNull();
+});
+
+test("タグ検索ができる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("Todo 検索"), {
+    target: { value: "生活" },
+  });
+
+  expect(screen.queryByText("筋トレ")).toBeNull();
+  expect(screen.queryByText("散歩")).toBeNull();
+  expect(screen.getByText("買い物")).toBeDefined();
 });
 
 test("Todo 編集後に localStorage へ保存される", async () => {

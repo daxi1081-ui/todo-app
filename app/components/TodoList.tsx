@@ -86,6 +86,23 @@ function toDateInputValue(date: Date) {
 }
 
 /**
+ * タグ入力を Todo に保存するタグ一覧へ変換します。
+ *
+ * @param value カンマ区切りのタグ入力。
+ * @returns 空文字と重複を取り除いたタグ一覧。
+ */
+function parseTags(value: string) {
+  return Array.from(
+    new Set(
+      value
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0),
+    ),
+  );
+}
+
+/**
  * 保存済み Todo を現在の Todo 型に整えます。
  *
  * @param value 判定する値。
@@ -112,6 +129,9 @@ function normalizeStoredTodo(value: unknown): Todo | null {
     memo: typeof todo.memo === "string" ? todo.memo : "",
     dueDate: typeof todo.dueDate === "string" ? todo.dueDate : "",
     priority: isTodoPriority(todo.priority) ? todo.priority : "none",
+    tags: Array.isArray(todo.tags)
+      ? todo.tags.filter((tag): tag is string => typeof tag === "string")
+      : [],
     completed: todo.completed,
   };
 }
@@ -230,6 +250,27 @@ function filterTodos(todos: Todo[], filter: TodoFilter) {
 }
 
 /**
+ * Todo 一覧を検索語で絞り込みます。
+ *
+ * @param todos 検索対象の Todo 一覧。
+ * @param query 検索語。
+ * @returns 検索語に一致する Todo 一覧。
+ */
+function searchTodos(todos: Todo[], query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  if (normalizedQuery.length === 0) {
+    return todos;
+  }
+
+  return todos.filter((todo) => {
+    const searchableText = [todo.title, todo.memo, ...todo.tags].join(" ").toLowerCase();
+
+    return searchableText.includes(normalizedQuery);
+  });
+}
+
+/**
  * Todo 一覧を選択中の条件に合わせて並び替えます。
  *
  * @param todos 並び替え対象の Todo 一覧。
@@ -279,13 +320,18 @@ export function TodoList({ todos }: TodoListProps) {
   const [newTodoMemo, setNewTodoMemo] = useState("");
   const [newTodoDueDate, setNewTodoDueDate] = useState("");
   const [newTodoPriority, setNewTodoPriority] = useState<TodoPriority>("none");
+  const [newTodoTags, setNewTodoTags] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<TodoFilter>("all");
   const [selectedSort, setSelectedSort] = useState<TodoSort>("created");
   const [hasLoadedStoredTodos, setHasLoadedStoredTodos] = useState(false);
   const hasChangedTodosRef = useRef(false);
   const hasChangedSortRef = useRef(false);
 
-  const filteredTodoItems = sortTodos(filterTodos(todoItems, selectedFilter), selectedSort);
+  const filteredTodoItems = sortTodos(
+    searchTodos(filterTodos(todoItems, selectedFilter), searchQuery),
+    selectedSort,
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -336,13 +382,14 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
-   * 指定した Todo のタイトル、メモ、期限日、優先度を更新します。
+   * 指定した Todo のタイトル、メモ、期限日、優先度、タグを更新します。
    *
    * @param id 更新する Todo の ID。
    * @param title 更新後のタイトル。
    * @param memo 更新後のメモ。
    * @param dueDate 更新後の期限日。
    * @param priority 更新後の優先度。
+   * @param tags 更新後のタグ一覧。
    */
   function updateTodo(
     id: number,
@@ -350,6 +397,7 @@ export function TodoList({ todos }: TodoListProps) {
     memo: string,
     dueDate: string,
     priority: TodoPriority,
+    tags: string[],
   ) {
     const trimmedTitle = title.trim();
 
@@ -362,7 +410,7 @@ export function TodoList({ todos }: TodoListProps) {
     setTodoItems((currentTodos) =>
       currentTodos.map((todo) =>
         todo.id === id
-          ? { ...todo, title: trimmedTitle, memo, dueDate, priority }
+          ? { ...todo, title: trimmedTitle, memo, dueDate, priority, tags }
           : todo,
       ),
     );
@@ -396,7 +444,7 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
-   * 入力されたタイトル、メモ、期限日、優先度で未完了の Todo を追加します。
+   * 入力されたタイトル、メモ、期限日、優先度、タグで未完了の Todo を追加します。
    *
    * @param event フォーム送信イベント。
    */
@@ -419,6 +467,7 @@ export function TodoList({ todos }: TodoListProps) {
         memo: newTodoMemo.trim(),
         dueDate: newTodoDueDate,
         priority: newTodoPriority,
+        tags: parseTags(newTodoTags),
         completed: false,
       },
     ]);
@@ -426,6 +475,7 @@ export function TodoList({ todos }: TodoListProps) {
     setNewTodoMemo("");
     setNewTodoDueDate("");
     setNewTodoPriority("none");
+    setNewTodoTags("");
   }
 
   /**
@@ -474,7 +524,18 @@ export function TodoList({ todos }: TodoListProps) {
         })}
       </div>
 
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+        <label htmlFor="todo-search" className="sr-only">
+          Todo 検索
+        </label>
+        <input
+          id="todo-search"
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="検索"
+          className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+        />
         <label htmlFor="todo-sort" className="sr-only">
           Todo 並び替え
         </label>
@@ -500,12 +561,13 @@ export function TodoList({ todos }: TodoListProps) {
             memo={todo.memo}
             dueDate={todo.dueDate}
             priority={todo.priority}
+            tags={todo.tags}
             priorityOptions={priorityOptions}
             completed={todo.completed}
             onToggle={() => toggleTodoCompleted(todo.id)}
             onDelete={() => deleteTodo(todo.id)}
-            onUpdateTodo={(title, memo, dueDate, priority) =>
-              updateTodo(todo.id, title, memo, dueDate, priority)
+            onUpdateTodo={(title, memo, dueDate, priority, tags) =>
+              updateTodo(todo.id, title, memo, dueDate, priority, tags)
             }
           />
         ))}
@@ -560,6 +622,17 @@ export function TodoList({ todos }: TodoListProps) {
             </option>
           ))}
         </select>
+        <label htmlFor="new-todo-tags" className="sr-only">
+          追加する Todo タグ
+        </label>
+        <input
+          id="new-todo-tags"
+          type="text"
+          value={newTodoTags}
+          onChange={(event) => setNewTodoTags(event.target.value)}
+          placeholder="タグ（カンマ区切り）"
+          className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+        />
         <div className="flex justify-end">
           <AddButton disabled={newTodoTitle.trim().length === 0} />
         </div>
