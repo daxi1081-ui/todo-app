@@ -4,10 +4,32 @@ import { afterEach, beforeEach, expect, test } from "vitest";
 import { TodoList } from "../app/components/TodoList";
 import type { Todo } from "../app/types/todo";
 
+function createDateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function createRelativeDateInputValue(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+
+  return createDateInputValue(date);
+}
+
+function formatDueDate(dueDate: string) {
+  return dueDate.replaceAll("-", "/");
+}
+
+const today = createRelativeDateInputValue(0);
+const tomorrow = createRelativeDateInputValue(1);
+
 const todos: Todo[] = [
-  { id: 1, title: "筋トレ", memo: "", completed: false },
-  { id: 2, title: "散歩", memo: "", completed: false },
-  { id: 3, title: "買い物", memo: "", completed: true },
+  { id: 1, title: "筋トレ", memo: "", dueDate: today, completed: false },
+  { id: 2, title: "散歩", memo: "", dueDate: tomorrow, completed: false },
+  { id: 3, title: "買い物", memo: "", dueDate: "", completed: true },
 ];
 
 const todoStorageKey = "todo-app.todos";
@@ -32,7 +54,9 @@ test("localStorage が空の場合、初期 Todo が表示される", () => {
 test("localStorage に Todo がある場合、その Todo が表示される", async () => {
   localStorage.setItem(
     todoStorageKey,
-    JSON.stringify([{ id: 10, title: "保存済み Todo", memo: "", completed: false }]),
+    JSON.stringify([
+      { id: 10, title: "保存済み Todo", memo: "", dueDate: "", completed: false },
+    ]),
   );
 
   render(<TodoList todos={todos} />);
@@ -77,6 +101,26 @@ test("完了済みを選ぶと完了済み Todo だけ表示される", () => {
   expect(screen.getByText("買い物")).toBeDefined();
 });
 
+test("今日を選ぶと今日期限の Todo だけ表示される", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "今日" }));
+
+  expect(screen.getByText("筋トレ")).toBeDefined();
+  expect(screen.queryByText("散歩")).toBeNull();
+  expect(screen.queryByText("買い物")).toBeNull();
+});
+
+test("予定を選ぶと期限日付き未完了 Todo だけ表示される", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "予定" }));
+
+  expect(screen.getByText("筋トレ")).toBeDefined();
+  expect(screen.getByText("散歩")).toBeDefined();
+  expect(screen.queryByText("買い物")).toBeNull();
+});
+
 test("すべてに戻すと全件表示される", () => {
   render(<TodoList todos={todos} />);
 
@@ -108,6 +152,7 @@ test("Todo を追加できる", () => {
 
   const input = screen.getByLabelText("追加する Todo") as HTMLInputElement;
   const memoInput = screen.getByLabelText("追加する Todo メモ") as HTMLTextAreaElement;
+  const dueDateInput = screen.getByLabelText("追加する Todo 期限日") as HTMLInputElement;
 
   fireEvent.change(input, { target: { value: "読書" } });
   fireEvent.click(screen.getByRole("button", { name: "追加" }));
@@ -115,6 +160,7 @@ test("Todo を追加できる", () => {
   expect(screen.getByText("読書")).toBeDefined();
   expect(input.value).toBe("");
   expect(memoInput.value).toBe("");
+  expect(dueDateInput.value).toBe("");
 });
 
 test("メモ付き Todo を追加できる", () => {
@@ -130,6 +176,38 @@ test("メモ付き Todo を追加できる", () => {
 
   expect(screen.getByText("読書")).toBeDefined();
   expect(screen.getByText("2章まで読む")).toBeDefined();
+});
+
+test("期限日付き Todo を追加できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("追加する Todo 期限日"), {
+    target: { value: tomorrow },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "追加" }));
+
+  expect(screen.getByText("読書")).toBeDefined();
+  expect(screen.getAllByText(`期限日: ${formatDueDate(tomorrow)}`).length).toBeGreaterThan(0);
+});
+
+test("期限日なし Todo も追加できる", async () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "追加" }));
+
+  expect(screen.getByText("読書")).toBeDefined();
+
+  await waitFor(() => {
+    const storedTodos = JSON.parse(localStorage.getItem(todoStorageKey) ?? "[]") as Todo[];
+
+    expect(storedTodos.find((todo) => todo.title === "読書")?.dueDate).toBe("");
+  });
 });
 
 test("Todo 追加後に localStorage へ保存される", async () => {
@@ -163,6 +241,24 @@ test("Todo 追加後に localStorage へメモも保存される", async () => {
   });
 });
 
+test("Todo 追加後に localStorage へ期限日も保存される", async () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("追加する Todo 期限日"), {
+    target: { value: tomorrow },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "追加" }));
+
+  await waitFor(() => {
+    const storedTodos = JSON.parse(localStorage.getItem(todoStorageKey) ?? "[]") as Todo[];
+
+    expect(storedTodos.find((todo) => todo.title === "読書")?.dueDate).toBe(tomorrow);
+  });
+});
+
 test("localStorage からメモも復元できる", async () => {
   localStorage.setItem(
     todoStorageKey,
@@ -176,6 +272,41 @@ test("localStorage からメモも復元できる", async () => {
   await waitFor(() => {
     expect(screen.getByText("保存済み Todo")).toBeDefined();
     expect(screen.getByText("保存済みメモ")).toBeDefined();
+  });
+});
+
+test("localStorage から期限日も復元できる", async () => {
+  localStorage.setItem(
+    todoStorageKey,
+    JSON.stringify([
+      {
+        id: 10,
+        title: "保存済み Todo",
+        memo: "",
+        dueDate: tomorrow,
+        completed: false,
+      },
+    ]),
+  );
+
+  render(<TodoList todos={todos} />);
+
+  await waitFor(() => {
+    expect(screen.getByText("保存済み Todo")).toBeDefined();
+    expect(screen.getByText(`期限日: ${formatDueDate(tomorrow)}`)).toBeDefined();
+  });
+});
+
+test("dueDate がない既存データでも画面が壊れない", async () => {
+  localStorage.setItem(
+    todoStorageKey,
+    JSON.stringify([{ id: 10, title: "古い Todo", memo: "", completed: false }]),
+  );
+
+  render(<TodoList todos={todos} />);
+
+  await waitFor(() => {
+    expect(screen.getByText("古い Todo")).toBeDefined();
   });
 });
 
@@ -271,6 +402,30 @@ test("メモを編集できる", () => {
   fireEvent.click(screen.getByRole("button", { name: "保存" }));
 
   expect(screen.getByText("腕立てを20回")).toBeDefined();
+});
+
+test("期限日を編集できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("Todo 期限日を編集"), {
+    target: { value: tomorrow },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "保存" }));
+
+  expect(screen.getAllByText(`期限日: ${formatDueDate(tomorrow)}`).length).toBeGreaterThan(0);
+});
+
+test("期限日を削除できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("Todo 期限日を編集"), {
+    target: { value: "" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "保存" }));
+
+  expect(screen.queryByText(`期限日: ${formatDueDate(today)}`)).toBeNull();
 });
 
 test("Todo 編集後に localStorage へ保存される", async () => {

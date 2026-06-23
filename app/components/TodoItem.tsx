@@ -8,15 +8,27 @@ type TodoItemProps = {
   title: string;
   /** 一覧に表示する Todo メモ。 */
   memo: string;
+  /** 一覧に表示する Todo 期限日。 */
+  dueDate: string;
   /** 完了済みかどうか。 */
   completed: boolean;
   /** 完了状態を切り替える処理。 */
   onToggle: () => void;
   /** Todo を削除する処理。 */
   onDelete: () => void;
-  /** Todo のタイトルとメモを更新する処理。 */
-  onUpdateTodo: (title: string, memo: string) => void;
+  /** Todo のタイトル、メモ、期限日を更新する処理。 */
+  onUpdateTodo: (title: string, memo: string, dueDate: string) => void;
 };
+
+/**
+ * 期限日を画面表示用の文字列に変換します。
+ *
+ * @param dueDate YYYY-MM-DD 形式の期限日。
+ * @returns YYYY/MM/DD 形式の期限日。
+ */
+function formatDueDate(dueDate: string) {
+  return dueDate.replaceAll("-", "/");
+}
 
 /**
  * Todo を 1 件分表示し、完了切り替え、編集、削除を扱います。
@@ -24,15 +36,17 @@ type TodoItemProps = {
  * @param props Todo 表示に必要な情報。
  * @param props.title 表示する Todo タイトル。
  * @param props.memo 表示する Todo メモ。
+ * @param props.dueDate 表示する Todo 期限日。
  * @param props.completed 完了済みかどうか。
  * @param props.onToggle 完了状態を切り替える処理。
  * @param props.onDelete Todo を削除する処理。
- * @param props.onUpdateTodo Todo のタイトルとメモを更新する処理。
+ * @param props.onUpdateTodo Todo のタイトル、メモ、期限日を更新する処理。
  * @returns Todo 1 件分の表示。
  */
 export function TodoItem({
   title,
   memo,
+  dueDate,
   completed,
   onToggle,
   onDelete,
@@ -40,10 +54,12 @@ export function TodoItem({
 }: TodoItemProps) {
   const editTitleInputId = useId();
   const editMemoInputId = useId();
+  const editDueDateInputId = useId();
   const editInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState(title);
   const [editingMemo, setEditingMemo] = useState(memo);
+  const [editingDueDate, setEditingDueDate] = useState(dueDate);
   const trimmedEditingTitle = editingTitle.trim();
 
   useEffect(() => {
@@ -61,6 +77,7 @@ export function TodoItem({
   function startEditing() {
     setEditingTitle(title);
     setEditingMemo(memo);
+    setEditingDueDate(dueDate);
     setIsEditing(true);
   }
 
@@ -70,6 +87,7 @@ export function TodoItem({
   function cancelEditing() {
     setEditingTitle(title);
     setEditingMemo(memo);
+    setEditingDueDate(dueDate);
     setIsEditing(false);
   }
 
@@ -85,7 +103,7 @@ export function TodoItem({
       return;
     }
 
-    onUpdateTodo(trimmedEditingTitle, editingMemo.trim());
+    onUpdateTodo(trimmedEditingTitle, editingMemo.trim(), editingDueDate);
     setIsEditing(false);
   }
 
@@ -143,6 +161,16 @@ export function TodoItem({
             rows={3}
             className="min-w-0 resize-y rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
           />
+          <label htmlFor={editDueDateInputId} className="sr-only">
+            Todo 期限日を編集
+          </label>
+          <input
+            id={editDueDateInputId}
+            type="date"
+            value={editingDueDate}
+            onChange={(event) => setEditingDueDate(event.target.value)}
+            className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+          />
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
@@ -181,6 +209,17 @@ export function TodoItem({
                 }
               >
                 {memo}
+              </span>
+            ) : null}
+            {dueDate.length > 0 ? (
+              <span
+                className={
+                  completed
+                    ? "mt-2 inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400"
+                    : "mt-2 inline-flex rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700"
+                }
+              >
+                期限日: {formatDueDate(dueDate)}
               </span>
             ) : null}
           </button>

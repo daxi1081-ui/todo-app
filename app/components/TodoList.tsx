@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
 import { AddButton } from "./AddButton";
@@ -14,11 +14,27 @@ type TodoListProps = {
 
 const filterOptions: TodoFilterOption[] = [
   { label: "すべて", value: "all" },
+  { label: "今日", value: "today" },
+  { label: "予定", value: "scheduled" },
   { label: "未完了", value: "active" },
   { label: "完了済み", value: "completed" },
 ];
 
 const todoStorageKey = "todo-app.todos";
+
+/**
+ * 日付入力と比較するためのローカル日付文字列を返します。
+ *
+ * @param date 変換する日付。
+ * @returns YYYY-MM-DD 形式の日付文字列。
+ */
+function toDateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
 
 /**
  * 保存済み Todo を現在の Todo 型に整えます。
@@ -45,6 +61,7 @@ function normalizeStoredTodo(value: unknown): Todo | null {
     id: todo.id,
     title: todo.title,
     memo: typeof todo.memo === "string" ? todo.memo : "",
+    dueDate: typeof todo.dueDate === "string" ? todo.dueDate : "",
     completed: todo.completed,
   };
 }
@@ -120,6 +137,16 @@ function filterTodos(todos: Todo[], filter: TodoFilter) {
     return todos.filter((todo) => todo.completed);
   }
 
+  if (filter === "today") {
+    const today = toDateInputValue(new Date());
+
+    return todos.filter((todo) => todo.dueDate === today);
+  }
+
+  if (filter === "scheduled") {
+    return todos.filter((todo) => todo.dueDate.length > 0 && !todo.completed);
+  }
+
   return todos;
 }
 
@@ -131,18 +158,43 @@ function filterTodos(todos: Todo[], filter: TodoFilter) {
  * @returns Todo 一覧。
  */
 export function TodoList({ todos }: TodoListProps) {
-  const [todoItems, setTodoItems] = useState<Todo[]>(() =>
-    loadTodosFromStorage(todos),
-  );
+  const [todoItems, setTodoItems] = useState<Todo[]>(todos);
   const [newTodoTitle, setNewTodoTitle] = useState("");
   const [newTodoMemo, setNewTodoMemo] = useState("");
+  const [newTodoDueDate, setNewTodoDueDate] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<TodoFilter>("all");
+  const [hasLoadedStoredTodos, setHasLoadedStoredTodos] = useState(false);
+  const hasChangedTodosRef = useRef(false);
 
   const filteredTodoItems = filterTodos(todoItems, selectedFilter);
 
   useEffect(() => {
+    let isActive = true;
+
+    queueMicrotask(() => {
+      if (!isActive) {
+        return;
+      }
+
+      if (!hasChangedTodosRef.current) {
+        setTodoItems(loadTodosFromStorage(todos));
+      }
+
+      setHasLoadedStoredTodos(true);
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [todos]);
+
+  useEffect(() => {
+    if (!hasLoadedStoredTodos) {
+      return;
+    }
+
     saveTodosToStorage(todoItems);
-  }, [todoItems]);
+  }, [hasLoadedStoredTodos, todoItems]);
 
   /**
    * 指定した Todo の完了状態を反転します。
@@ -150,6 +202,8 @@ export function TodoList({ todos }: TodoListProps) {
    * @param id 完了状態を切り替える Todo の ID。
    */
   function toggleTodoCompleted(id: number) {
+    hasChangedTodosRef.current = true;
+
     setTodoItems((currentTodos) =>
       currentTodos.map((todo) =>
         todo.id === id ? { ...todo, completed: !todo.completed } : todo,
@@ -158,22 +212,25 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
-   * 指定した Todo のタイトルとメモを更新します。
+   * 指定した Todo のタイトル、メモ、期限日を更新します。
    *
    * @param id 更新する Todo の ID。
    * @param title 更新後のタイトル。
    * @param memo 更新後のメモ。
+   * @param dueDate 更新後の期限日。
    */
-  function updateTodo(id: number, title: string, memo: string) {
+  function updateTodo(id: number, title: string, memo: string, dueDate: string) {
     const trimmedTitle = title.trim();
 
     if (trimmedTitle.length === 0) {
       return;
     }
 
+    hasChangedTodosRef.current = true;
+
     setTodoItems((currentTodos) =>
       currentTodos.map((todo) =>
-        todo.id === id ? { ...todo, title: trimmedTitle, memo } : todo,
+        todo.id === id ? { ...todo, title: trimmedTitle, memo, dueDate } : todo,
       ),
     );
   }
@@ -184,6 +241,8 @@ export function TodoList({ todos }: TodoListProps) {
    * @param id 削除する Todo の ID。
    */
   function deleteTodo(id: number) {
+    hasChangedTodosRef.current = true;
+
     setTodoItems((currentTodos) =>
       currentTodos.filter((todo) => todo.id !== id),
     );
@@ -204,7 +263,7 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
-   * 入力されたタイトルとメモで未完了の Todo を追加します。
+   * 入力されたタイトル、メモ、期限日で未完了の Todo を追加します。
    *
    * @param event フォーム送信イベント。
    */
@@ -217,17 +276,21 @@ export function TodoList({ todos }: TodoListProps) {
       return;
     }
 
+    hasChangedTodosRef.current = true;
+
     setTodoItems((currentTodos) => [
       ...currentTodos,
       {
         id: createTodoId(currentTodos),
         title,
         memo: newTodoMemo.trim(),
+        dueDate: newTodoDueDate,
         completed: false,
       },
     ]);
     setNewTodoTitle("");
     setNewTodoMemo("");
+    setNewTodoDueDate("");
   }
 
   /**
@@ -272,10 +335,13 @@ export function TodoList({ todos }: TodoListProps) {
             key={todo.id}
             title={todo.title}
             memo={todo.memo}
+            dueDate={todo.dueDate}
             completed={todo.completed}
             onToggle={() => toggleTodoCompleted(todo.id)}
             onDelete={() => deleteTodo(todo.id)}
-            onUpdateTodo={(title, memo) => updateTodo(todo.id, title, memo)}
+            onUpdateTodo={(title, memo, dueDate) =>
+              updateTodo(todo.id, title, memo, dueDate)
+            }
           />
         ))}
       </div>
@@ -303,6 +369,16 @@ export function TodoList({ todos }: TodoListProps) {
           placeholder="メモ"
           rows={3}
           className="min-w-0 resize-y rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+        />
+        <label htmlFor="new-todo-due-date" className="sr-only">
+          追加する Todo 期限日
+        </label>
+        <input
+          id="new-todo-due-date"
+          type="date"
+          value={newTodoDueDate}
+          onChange={(event) => setNewTodoDueDate(event.target.value)}
+          className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition focus:border-blue-400"
         />
         <div className="flex justify-end">
           <AddButton disabled={newTodoTitle.trim().length === 0} />
