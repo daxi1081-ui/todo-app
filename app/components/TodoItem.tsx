@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
+import type { TodoPriority, TodoPriorityOption } from "../types/todo";
+
 type TodoItemProps = {
   /** 一覧に表示する Todo タイトル。 */
   title: string;
@@ -10,14 +12,23 @@ type TodoItemProps = {
   memo: string;
   /** 一覧に表示する Todo 期限日。 */
   dueDate: string;
+  /** 一覧に表示する Todo 優先度。 */
+  priority: TodoPriority;
+  /** 優先度の選択肢。 */
+  priorityOptions: TodoPriorityOption[];
   /** 完了済みかどうか。 */
   completed: boolean;
   /** 完了状態を切り替える処理。 */
   onToggle: () => void;
   /** Todo を削除する処理。 */
   onDelete: () => void;
-  /** Todo のタイトル、メモ、期限日を更新する処理。 */
-  onUpdateTodo: (title: string, memo: string, dueDate: string) => void;
+  /** Todo のタイトル、メモ、期限日、優先度を更新する処理。 */
+  onUpdateTodo: (
+    title: string,
+    memo: string,
+    dueDate: string,
+    priority: TodoPriority,
+  ) => void;
 };
 
 /**
@@ -31,22 +42,37 @@ function formatDueDate(dueDate: string) {
 }
 
 /**
+ * 優先度の表示ラベルを返します。
+ *
+ * @param priority 優先度。
+ * @param options 優先度の選択肢。
+ * @returns 優先度の表示ラベル。
+ */
+function getPriorityLabel(priority: TodoPriority, options: TodoPriorityOption[]) {
+  return options.find((option) => option.value === priority)?.label ?? "なし";
+}
+
+/**
  * Todo を 1 件分表示し、完了切り替え、編集、削除を扱います。
  *
  * @param props Todo 表示に必要な情報。
  * @param props.title 表示する Todo タイトル。
  * @param props.memo 表示する Todo メモ。
  * @param props.dueDate 表示する Todo 期限日。
+ * @param props.priority 表示する Todo 優先度。
+ * @param props.priorityOptions 優先度の選択肢。
  * @param props.completed 完了済みかどうか。
  * @param props.onToggle 完了状態を切り替える処理。
  * @param props.onDelete Todo を削除する処理。
- * @param props.onUpdateTodo Todo のタイトル、メモ、期限日を更新する処理。
+ * @param props.onUpdateTodo Todo のタイトル、メモ、期限日、優先度を更新する処理。
  * @returns Todo 1 件分の表示。
  */
 export function TodoItem({
   title,
   memo,
   dueDate,
+  priority,
+  priorityOptions,
   completed,
   onToggle,
   onDelete,
@@ -55,12 +81,15 @@ export function TodoItem({
   const editTitleInputId = useId();
   const editMemoInputId = useId();
   const editDueDateInputId = useId();
+  const editPriorityInputId = useId();
   const editInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState(title);
   const [editingMemo, setEditingMemo] = useState(memo);
   const [editingDueDate, setEditingDueDate] = useState(dueDate);
+  const [editingPriority, setEditingPriority] = useState<TodoPriority>(priority);
   const trimmedEditingTitle = editingTitle.trim();
+  const priorityLabel = getPriorityLabel(priority, priorityOptions);
 
   useEffect(() => {
     if (!isEditing) {
@@ -78,6 +107,7 @@ export function TodoItem({
     setEditingTitle(title);
     setEditingMemo(memo);
     setEditingDueDate(dueDate);
+    setEditingPriority(priority);
     setIsEditing(true);
   }
 
@@ -88,6 +118,7 @@ export function TodoItem({
     setEditingTitle(title);
     setEditingMemo(memo);
     setEditingDueDate(dueDate);
+    setEditingPriority(priority);
     setIsEditing(false);
   }
 
@@ -103,7 +134,7 @@ export function TodoItem({
       return;
     }
 
-    onUpdateTodo(trimmedEditingTitle, editingMemo.trim(), editingDueDate);
+    onUpdateTodo(trimmedEditingTitle, editingMemo.trim(), editingDueDate, editingPriority);
     setIsEditing(false);
   }
 
@@ -171,6 +202,21 @@ export function TodoItem({
             onChange={(event) => setEditingDueDate(event.target.value)}
             className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
           />
+          <label htmlFor={editPriorityInputId} className="sr-only">
+            Todo 優先度を編集
+          </label>
+          <select
+            id={editPriorityInputId}
+            value={editingPriority}
+            onChange={(event) => setEditingPriority(event.target.value as TodoPriority)}
+            className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+          >
+            {priorityOptions.map((priorityOption) => (
+              <option key={priorityOption.value} value={priorityOption.value}>
+                優先度: {priorityOption.label}
+              </option>
+            ))}
+          </select>
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
@@ -220,6 +266,17 @@ export function TodoItem({
                 }
               >
                 期限日: {formatDueDate(dueDate)}
+              </span>
+            ) : null}
+            {priority !== "none" ? (
+              <span
+                className={
+                  completed
+                    ? "ml-2 mt-2 inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400"
+                    : "ml-2 mt-2 inline-flex rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700"
+                }
+              >
+                優先度: {priorityLabel}
               </span>
             ) : null}
           </button>

@@ -27,12 +27,26 @@ const today = createRelativeDateInputValue(0);
 const tomorrow = createRelativeDateInputValue(1);
 
 const todos: Todo[] = [
-  { id: 1, title: "筋トレ", memo: "", dueDate: today, completed: false },
-  { id: 2, title: "散歩", memo: "", dueDate: tomorrow, completed: false },
-  { id: 3, title: "買い物", memo: "", dueDate: "", completed: true },
+  { id: 1, title: "筋トレ", memo: "", dueDate: today, priority: "low", completed: false },
+  {
+    id: 2,
+    title: "散歩",
+    memo: "",
+    dueDate: tomorrow,
+    priority: "high",
+    completed: false,
+  },
+  { id: 3, title: "買い物", memo: "", dueDate: "", priority: "medium", completed: true },
 ];
 
 const todoStorageKey = "todo-app.todos";
+const todoSortStorageKey = "todo-app.sort";
+
+function getVisibleTodoTitles() {
+  return screen
+    .getAllByRole("button", { name: /を削除する$/ })
+    .map((button) => button.getAttribute("aria-label")?.replace("を削除する", ""));
+}
 
 beforeEach(() => {
   localStorage.clear();
@@ -55,7 +69,14 @@ test("localStorage に Todo がある場合、その Todo が表示される", a
   localStorage.setItem(
     todoStorageKey,
     JSON.stringify([
-      { id: 10, title: "保存済み Todo", memo: "", dueDate: "", completed: false },
+      {
+        id: 10,
+        title: "保存済み Todo",
+        memo: "",
+        dueDate: "",
+        priority: "none",
+        completed: false,
+      },
     ]),
   );
 
@@ -132,6 +153,64 @@ test("すべてに戻すと全件表示される", () => {
   expect(screen.getByText("買い物")).toBeDefined();
 });
 
+test("作成順で並び替えできる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("Todo 並び替え"), {
+    target: { value: "priority" },
+  });
+  fireEvent.change(screen.getByLabelText("Todo 並び替え"), {
+    target: { value: "created" },
+  });
+
+  expect(getVisibleTodoTitles()).toEqual(["筋トレ", "散歩", "買い物"]);
+});
+
+test("期限日が近い順で並び替えできる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("Todo 並び替え"), {
+    target: { value: "dueDate" },
+  });
+
+  expect(getVisibleTodoTitles()).toEqual(["筋トレ", "散歩", "買い物"]);
+});
+
+test("優先度が高い順で並び替えできる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("Todo 並び替え"), {
+    target: { value: "priority" },
+  });
+
+  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+});
+
+test("並び替え状態が localStorage に保存される", async () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("Todo 並び替え"), {
+    target: { value: "priority" },
+  });
+
+  await waitFor(() => {
+    expect(localStorage.getItem(todoSortStorageKey)).toBe("priority");
+  });
+});
+
+test("localStorage から並び替え状態が復元される", async () => {
+  localStorage.setItem(todoSortStorageKey, "priority");
+
+  render(<TodoList todos={todos} />);
+
+  await waitFor(() => {
+    expect((screen.getByLabelText("Todo 並び替え") as HTMLSelectElement).value).toBe(
+      "priority",
+    );
+  });
+  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+});
+
 test("選択中のフィルタは aria-pressed で分かる", () => {
   render(<TodoList todos={todos} />);
 
@@ -153,6 +232,7 @@ test("Todo を追加できる", () => {
   const input = screen.getByLabelText("追加する Todo") as HTMLInputElement;
   const memoInput = screen.getByLabelText("追加する Todo メモ") as HTMLTextAreaElement;
   const dueDateInput = screen.getByLabelText("追加する Todo 期限日") as HTMLInputElement;
+  const priorityInput = screen.getByLabelText("追加する Todo 優先度") as HTMLSelectElement;
 
   fireEvent.change(input, { target: { value: "読書" } });
   fireEvent.click(screen.getByRole("button", { name: "追加" }));
@@ -161,6 +241,7 @@ test("Todo を追加できる", () => {
   expect(input.value).toBe("");
   expect(memoInput.value).toBe("");
   expect(dueDateInput.value).toBe("");
+  expect(priorityInput.value).toBe("none");
 });
 
 test("メモ付き Todo を追加できる", () => {
@@ -207,6 +288,38 @@ test("期限日なし Todo も追加できる", async () => {
     const storedTodos = JSON.parse(localStorage.getItem(todoStorageKey) ?? "[]") as Todo[];
 
     expect(storedTodos.find((todo) => todo.title === "読書")?.dueDate).toBe("");
+  });
+});
+
+test("優先度付き Todo を追加できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("追加する Todo 優先度"), {
+    target: { value: "high" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "追加" }));
+
+  expect(screen.getByText("読書")).toBeDefined();
+  expect(screen.getAllByText("優先度: 高").length).toBeGreaterThan(0);
+});
+
+test("優先度なし Todo も追加できる", async () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "追加" }));
+
+  expect(screen.getByText("読書")).toBeDefined();
+
+  await waitFor(() => {
+    const storedTodos = JSON.parse(localStorage.getItem(todoStorageKey) ?? "[]") as Todo[];
+
+    expect(storedTodos.find((todo) => todo.title === "読書")?.priority).toBe("none");
   });
 });
 
@@ -259,6 +372,24 @@ test("Todo 追加後に localStorage へ期限日も保存される", async () =
   });
 });
 
+test("Todo 追加後に localStorage へ優先度も保存される", async () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("追加する Todo 優先度"), {
+    target: { value: "medium" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "追加" }));
+
+  await waitFor(() => {
+    const storedTodos = JSON.parse(localStorage.getItem(todoStorageKey) ?? "[]") as Todo[];
+
+    expect(storedTodos.find((todo) => todo.title === "読書")?.priority).toBe("medium");
+  });
+});
+
 test("localStorage からメモも復元できる", async () => {
   localStorage.setItem(
     todoStorageKey,
@@ -272,6 +403,29 @@ test("localStorage からメモも復元できる", async () => {
   await waitFor(() => {
     expect(screen.getByText("保存済み Todo")).toBeDefined();
     expect(screen.getByText("保存済みメモ")).toBeDefined();
+  });
+});
+
+test("localStorage から優先度も復元できる", async () => {
+  localStorage.setItem(
+    todoStorageKey,
+    JSON.stringify([
+      {
+        id: 10,
+        title: "保存済み Todo",
+        memo: "",
+        dueDate: "",
+        priority: "high",
+        completed: false,
+      },
+    ]),
+  );
+
+  render(<TodoList todos={todos} />);
+
+  await waitFor(() => {
+    expect(screen.getByText("保存済み Todo")).toBeDefined();
+    expect(screen.getAllByText("優先度: 高").length).toBeGreaterThan(0);
   });
 });
 
@@ -301,6 +455,21 @@ test("dueDate がない既存データでも画面が壊れない", async () => 
   localStorage.setItem(
     todoStorageKey,
     JSON.stringify([{ id: 10, title: "古い Todo", memo: "", completed: false }]),
+  );
+
+  render(<TodoList todos={todos} />);
+
+  await waitFor(() => {
+    expect(screen.getByText("古い Todo")).toBeDefined();
+  });
+});
+
+test("priority がない既存データでも画面が壊れない", async () => {
+  localStorage.setItem(
+    todoStorageKey,
+    JSON.stringify([
+      { id: 10, title: "古い Todo", memo: "", dueDate: "", completed: false },
+    ]),
   );
 
   render(<TodoList todos={todos} />);
@@ -426,6 +595,18 @@ test("期限日を削除できる", () => {
   fireEvent.click(screen.getByRole("button", { name: "保存" }));
 
   expect(screen.queryByText(`期限日: ${formatDueDate(today)}`)).toBeNull();
+});
+
+test("優先度を編集できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("Todo 優先度を編集"), {
+    target: { value: "high" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "保存" }));
+
+  expect(screen.getAllByText("優先度: 高").length).toBeGreaterThan(0);
 });
 
 test("Todo 編集後に localStorage へ保存される", async () => {
