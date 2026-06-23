@@ -3,6 +3,8 @@ export type Todo = {
   id: number;
   /** 画面に表示する Todo タイトル。 */
   title: string;
+  /** Todo の補足メモ。 */
+  memo: string;
   /** Todo が完了済みかどうか。 */
   completed: boolean;
 };

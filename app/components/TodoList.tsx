@@ -21,23 +21,32 @@ const filterOptions: TodoFilterOption[] = [
 const todoStorageKey = "todo-app.todos";
 
 /**
- * localStorage に保存できる Todo 形式かどうかを判定します。
+ * 保存済み Todo を現在の Todo 型に整えます。
  *
  * @param value 判定する値。
- * @returns Todo として扱える場合は true。
+ * @returns Todo として扱える値、または null。
  */
-function isTodo(value: unknown): value is Todo {
+function normalizeStoredTodo(value: unknown): Todo | null {
   if (typeof value !== "object" || value === null) {
-    return false;
+    return null;
   }
 
   const todo = value as Partial<Todo>;
 
-  return (
-    typeof todo.id === "number" &&
-    typeof todo.title === "string" &&
-    typeof todo.completed === "boolean"
-  );
+  if (
+    typeof todo.id !== "number" ||
+    typeof todo.title !== "string" ||
+    typeof todo.completed !== "boolean"
+  ) {
+    return null;
+  }
+
+  return {
+    id: todo.id,
+    title: todo.title,
+    memo: typeof todo.memo === "string" ? todo.memo : "",
+    completed: todo.completed,
+  };
 }
 
 /**
@@ -60,11 +69,23 @@ function loadTodosFromStorage(fallbackTodos: Todo[]) {
   try {
     const parsedTodos: unknown = JSON.parse(storedTodos);
 
-    if (!Array.isArray(parsedTodos) || !parsedTodos.every(isTodo)) {
+    if (!Array.isArray(parsedTodos)) {
       return fallbackTodos;
     }
 
-    return parsedTodos;
+    const normalizedTodos: Todo[] = [];
+
+    for (const parsedTodo of parsedTodos) {
+      const normalizedTodo = normalizeStoredTodo(parsedTodo);
+
+      if (normalizedTodo === null) {
+        return fallbackTodos;
+      }
+
+      normalizedTodos.push(normalizedTodo);
+    }
+
+    return normalizedTodos;
   } catch {
     return fallbackTodos;
   }
@@ -114,6 +135,7 @@ export function TodoList({ todos }: TodoListProps) {
     loadTodosFromStorage(todos),
   );
   const [newTodoTitle, setNewTodoTitle] = useState("");
+  const [newTodoMemo, setNewTodoMemo] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<TodoFilter>("all");
 
   const filteredTodoItems = filterTodos(todoItems, selectedFilter);
@@ -136,12 +158,13 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
-   * 指定した Todo のタイトルを更新します。
+   * 指定した Todo のタイトルとメモを更新します。
    *
-   * @param id タイトルを更新する Todo の ID。
+   * @param id 更新する Todo の ID。
    * @param title 更新後のタイトル。
+   * @param memo 更新後のメモ。
    */
-  function updateTodoTitle(id: number, title: string) {
+  function updateTodo(id: number, title: string, memo: string) {
     const trimmedTitle = title.trim();
 
     if (trimmedTitle.length === 0) {
@@ -150,7 +173,7 @@ export function TodoList({ todos }: TodoListProps) {
 
     setTodoItems((currentTodos) =>
       currentTodos.map((todo) =>
-        todo.id === id ? { ...todo, title: trimmedTitle } : todo,
+        todo.id === id ? { ...todo, title: trimmedTitle, memo } : todo,
       ),
     );
   }
@@ -181,7 +204,7 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
-   * 入力されたタイトルで未完了の Todo を追加します。
+   * 入力されたタイトルとメモで未完了の Todo を追加します。
    *
    * @param event フォーム送信イベント。
    */
@@ -199,10 +222,12 @@ export function TodoList({ todos }: TodoListProps) {
       {
         id: createTodoId(currentTodos),
         title,
+        memo: newTodoMemo.trim(),
         completed: false,
       },
     ]);
     setNewTodoTitle("");
+    setNewTodoMemo("");
   }
 
   /**
@@ -246,15 +271,16 @@ export function TodoList({ todos }: TodoListProps) {
           <TodoItem
             key={todo.id}
             title={todo.title}
+            memo={todo.memo}
             completed={todo.completed}
             onToggle={() => toggleTodoCompleted(todo.id)}
             onDelete={() => deleteTodo(todo.id)}
-            onUpdateTitle={(title) => updateTodoTitle(todo.id, title)}
+            onUpdateTodo={(title, memo) => updateTodo(todo.id, title, memo)}
           />
         ))}
       </div>
 
-      <form onSubmit={addTodo} className="mt-6 flex gap-3">
+      <form onSubmit={addTodo} className="mt-6 grid gap-3">
         <label htmlFor="new-todo-title" className="sr-only">
           追加する Todo
         </label>
@@ -267,7 +293,20 @@ export function TodoList({ todos }: TodoListProps) {
           placeholder="新しい Todo"
           className="min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400"
         />
-        <AddButton disabled={newTodoTitle.trim().length === 0} />
+        <label htmlFor="new-todo-memo" className="sr-only">
+          追加する Todo メモ
+        </label>
+        <textarea
+          id="new-todo-memo"
+          value={newTodoMemo}
+          onChange={(event) => setNewTodoMemo(event.target.value)}
+          placeholder="メモ"
+          rows={3}
+          className="min-w-0 resize-y rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+        />
+        <div className="flex justify-end">
+          <AddButton disabled={newTodoTitle.trim().length === 0} />
+        </div>
       </form>
     </>
   );
