@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
 import { parseTags } from "../utils/tags";
-import type { TodoPriority, TodoPriorityOption } from "../types/todo";
+import type { TodoPriority, TodoPriorityOption, TodoSubtask } from "../types/todo";
 
 type TodoItemProps = {
   /** 一覧に表示する Todo タイトル。 */
@@ -17,6 +17,8 @@ type TodoItemProps = {
   priority: TodoPriority;
   /** 一覧に表示する Todo タグ一覧。 */
   tags: string[];
+  /** 一覧に表示するサブタスク一覧。 */
+  subtasks: TodoSubtask[];
   /** 優先度の選択肢。 */
   priorityOptions: TodoPriorityOption[];
   /** 完了済みかどうか。 */
@@ -33,6 +35,14 @@ type TodoItemProps = {
     priority: TodoPriority,
     tags: string[],
   ) => void;
+  /** サブタスクを追加する処理。 */
+  onAddSubtask: (title: string) => void;
+  /** サブタスクの完了状態を切り替える処理。 */
+  onToggleSubtask: (subtaskId: number) => void;
+  /** サブタスクのタイトルを更新する処理。 */
+  onUpdateSubtask: (subtaskId: number, title: string) => void;
+  /** サブタスクを削除する処理。 */
+  onDeleteSubtask: (subtaskId: number) => void;
 };
 
 /**
@@ -65,6 +75,7 @@ function getPriorityLabel(priority: TodoPriority, options: TodoPriorityOption[])
  * @param props.dueDate 表示する Todo 期限日。
  * @param props.priority 表示する Todo 優先度。
  * @param props.tags 表示する Todo タグ一覧。
+ * @param props.subtasks 表示するサブタスク一覧。
  * @param props.priorityOptions 優先度の選択肢。
  * @param props.completed 完了済みかどうか。
  * @param props.onToggle 完了状態を切り替える処理。
@@ -78,11 +89,16 @@ export function TodoItem({
   dueDate,
   priority,
   tags,
+  subtasks,
   priorityOptions,
   completed,
   onToggle,
   onDelete,
   onUpdateTodo,
+  onAddSubtask,
+  onToggleSubtask,
+  onUpdateSubtask,
+  onDeleteSubtask,
 }: TodoItemProps) {
   const editTitleInputId = useId();
   const editMemoInputId = useId();
@@ -96,8 +112,12 @@ export function TodoItem({
   const [editingDueDate, setEditingDueDate] = useState(dueDate);
   const [editingPriority, setEditingPriority] = useState<TodoPriority>(priority);
   const [editingTags, setEditingTags] = useState(tags.join(", "));
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
+  const [editingSubtaskId, setEditingSubtaskId] = useState<number | null>(null);
+  const [editingSubtaskTitle, setEditingSubtaskTitle] = useState("");
   const trimmedEditingTitle = editingTitle.trim();
   const priorityLabel = getPriorityLabel(priority, priorityOptions);
+  const completedSubtaskCount = subtasks.filter((subtask) => subtask.completed).length;
 
   useEffect(() => {
     if (!isEditing) {
@@ -172,8 +192,62 @@ export function TodoItem({
     }
   }
 
+  /**
+   * サブタスクを追加します。
+   *
+   * @param event フォーム送信イベント。
+   */
+  function addSubtask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedTitle = newSubtaskTitle.trim();
+
+    if (trimmedTitle.length === 0) {
+      return;
+    }
+
+    onAddSubtask(trimmedTitle);
+    setNewSubtaskTitle("");
+  }
+
+  /**
+   * サブタスクの編集を開始します。
+   *
+   * @param subtask 編集するサブタスク。
+   */
+  function startSubtaskEditing(subtask: TodoSubtask) {
+    setEditingSubtaskId(subtask.id);
+    setEditingSubtaskTitle(subtask.title);
+  }
+
+  /**
+   * サブタスク編集を保存します。
+   *
+   * @param event フォーム送信イベント。
+   */
+  function saveSubtaskEditing(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (editingSubtaskId === null || editingSubtaskTitle.trim().length === 0) {
+      return;
+    }
+
+    onUpdateSubtask(editingSubtaskId, editingSubtaskTitle);
+    setEditingSubtaskId(null);
+    setEditingSubtaskTitle("");
+  }
+
+  /**
+   * サブタスク編集をキャンセルします。
+   */
+  function cancelSubtaskEditing() {
+    setEditingSubtaskId(null);
+    setEditingSubtaskTitle("");
+  }
+
   return (
-    <div className="flex items-start gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0">
+    <div className="border-b border-gray-100 px-4 py-4 last:border-b-0">
+      <div className="flex items-start gap-3">
       <button
         type="button"
         className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gray-300 text-sm font-bold text-blue-600 transition hover:border-blue-400"
@@ -246,6 +320,7 @@ export function TodoItem({
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
+              aria-label="Todoを保存"
               className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
               disabled={trimmedEditingTitle.length === 0}
             >
@@ -321,6 +396,9 @@ export function TodoItem({
                 ))}
               </span>
             ) : null}
+            <span className="mt-2 block text-xs font-semibold text-gray-500">
+              サブタスク: {completedSubtaskCount}/{subtasks.length}
+            </span>
           </button>
 
           <button
@@ -342,6 +420,106 @@ export function TodoItem({
       >
         削除
       </button>
+      </div>
+
+      {!isEditing ? (
+        <div className="ml-10 mt-3 grid gap-2">
+          {subtasks.map((subtask) =>
+            editingSubtaskId === subtask.id ? (
+              <form
+                key={subtask.id}
+                className="flex min-w-0 gap-2"
+                onSubmit={saveSubtaskEditing}
+              >
+                <label htmlFor={`subtask-edit-${subtask.id}`} className="sr-only">
+                  サブタスクを編集
+                </label>
+                <input
+                  id={`subtask-edit-${subtask.id}`}
+                  type="text"
+                  value={editingSubtaskTitle}
+                  onChange={(event) => setEditingSubtaskTitle(event.target.value)}
+                  className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                />
+                <button
+                  type="submit"
+                  aria-label="サブタスクを保存"
+                  className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                  disabled={editingSubtaskTitle.trim().length === 0}
+                >
+                  保存
+                </button>
+                <button
+                  type="button"
+                  className="rounded-md px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                  onClick={cancelSubtaskEditing}
+                >
+                  キャンセル
+                </button>
+              </form>
+            ) : (
+              <div key={subtask.id} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-bold text-blue-600 transition hover:border-blue-400"
+                  aria-label={subtask.completed ? "サブタスクを未完了に戻す" : "サブタスクを完了にする"}
+                  aria-pressed={subtask.completed}
+                  onClick={() => onToggleSubtask(subtask.id)}
+                >
+                  {subtask.completed ? "✓" : ""}
+                </button>
+                <span
+                  className={
+                    subtask.completed
+                      ? "min-w-0 flex-1 truncate text-sm text-gray-400 line-through"
+                      : "min-w-0 flex-1 truncate text-sm text-gray-700"
+                  }
+                >
+                  {subtask.title}
+                </span>
+                <button
+                  type="button"
+                  className="rounded-md px-2 py-1 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+                  aria-label={`${subtask.title}を編集する`}
+                  onClick={() => startSubtaskEditing(subtask)}
+                >
+                  編集
+                </button>
+                <button
+                  type="button"
+                  className="rounded-md px-2 py-1 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600"
+                  aria-label={`${subtask.title}を削除する`}
+                  onClick={() => onDeleteSubtask(subtask.id)}
+                >
+                  削除
+                </button>
+              </div>
+            ),
+          )}
+
+          <form className="flex min-w-0 gap-2" onSubmit={addSubtask}>
+            <label htmlFor={`new-subtask-${title}`} className="sr-only">
+              {title} のサブタスクを追加
+            </label>
+            <input
+              id={`new-subtask-${title}`}
+              type="text"
+              value={newSubtaskTitle}
+              onChange={(event) => setNewSubtaskTitle(event.target.value)}
+              placeholder="サブタスク"
+              className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+            />
+            <button
+              type="submit"
+              aria-label={`${title}のサブタスクを追加`}
+              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+              disabled={newSubtaskTitle.trim().length === 0}
+            >
+              追加
+            </button>
+          </form>
+        </div>
+      ) : null}
     </div>
   );
 }

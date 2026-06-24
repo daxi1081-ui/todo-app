@@ -13,6 +13,7 @@ const todos: Todo[] = [
     dueDate: "",
     priority: "none",
     tags: [],
+    subtasks: [],
     completed: false,
   },
   {
@@ -22,6 +23,7 @@ const todos: Todo[] = [
     dueDate: "",
     priority: "none",
     tags: [],
+    subtasks: [],
     completed: false,
   },
   {
@@ -31,6 +33,7 @@ const todos: Todo[] = [
     dueDate: "",
     priority: "none",
     tags: [],
+    subtasks: [],
     completed: true,
   },
 ];

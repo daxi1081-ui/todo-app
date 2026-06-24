@@ -14,6 +14,7 @@ import type {
   TodoPriorityOption,
   TodoSort,
   TodoSortOption,
+  TodoSubtask,
 } from "../types/todo";
 
 type TodoListProps = {
@@ -107,6 +108,30 @@ function normalizeStoredTodo(value: unknown): Todo | null {
     return null;
   }
 
+  const subtasks: TodoSubtask[] = [];
+
+  if (Array.isArray(todo.subtasks)) {
+    for (const value of todo.subtasks) {
+      if (typeof value !== "object" || value === null) {
+        continue;
+      }
+
+      const subtask = value as Partial<TodoSubtask>;
+
+      if (
+        typeof subtask.id === "number" &&
+        typeof subtask.title === "string" &&
+        typeof subtask.completed === "boolean"
+      ) {
+        subtasks.push({
+          id: subtask.id,
+          title: subtask.title,
+          completed: subtask.completed,
+        });
+      }
+    }
+  }
+
   return {
     id: todo.id,
     title: todo.title,
@@ -119,6 +144,7 @@ function normalizeStoredTodo(value: unknown): Todo | null {
           .map(normalizeTag)
           .filter((tag) => tag.length > 0)
       : [],
+    subtasks,
     completed: todo.completed,
   };
 }
@@ -251,7 +277,14 @@ function searchTodos(todos: Todo[], query: string) {
   }
 
   return todos.filter((todo) => {
-    const searchableText = [todo.title, todo.memo, ...todo.tags].join(" ").toLowerCase();
+    const searchableText = [
+      todo.title,
+      todo.memo,
+      ...todo.tags,
+      ...todo.subtasks.map((subtask) => subtask.title),
+    ]
+      .join(" ")
+      .toLowerCase();
 
     return searchableText.includes(normalizedQuery);
   });
@@ -363,7 +396,15 @@ export function TodoList({ todos }: TodoListProps) {
 
     setTodoItems((currentTodos) =>
       currentTodos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo,
+        todo.id === id
+          ? {
+              ...todo,
+              completed: !todo.completed,
+              subtasks: !todo.completed
+                ? todo.subtasks.map((subtask) => ({ ...subtask, completed: true }))
+                : todo.subtasks,
+            }
+          : todo,
       ),
     );
   }
@@ -455,6 +496,7 @@ export function TodoList({ todos }: TodoListProps) {
         dueDate: newTodoDueDate,
         priority: newTodoPriority,
         tags: parseTags(newTodoTags),
+        subtasks: [],
         completed: false,
       },
     ]);
@@ -485,6 +527,130 @@ export function TodoList({ todos }: TodoListProps) {
   function changeSort(sort: TodoSort) {
     hasChangedSortRef.current = true;
     setSelectedSort(sort);
+  }
+
+  /**
+   * 現在のサブタスク一覧から一意な ID を作成します。
+   *
+   * @param subtasks 現在のサブタスク一覧。
+   * @returns 新しいサブタスクに付与する ID。
+   */
+  function createSubtaskId(subtasks: TodoSubtask[]) {
+    if (subtasks.length === 0) {
+      return 1;
+    }
+
+    return Math.max(...subtasks.map((subtask) => subtask.id)) + 1;
+  }
+
+  /**
+   * 指定した Todo にサブタスクを追加します。
+   *
+   * @param todoId サブタスクを追加する Todo の ID。
+   * @param title サブタスクのタイトル。
+   */
+  function addSubtask(todoId: number, title: string) {
+    const trimmedTitle = title.trim();
+
+    if (trimmedTitle.length === 0) {
+      return;
+    }
+
+    hasChangedTodosRef.current = true;
+
+    setTodoItems((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === todoId
+          ? {
+              ...todo,
+              subtasks: [
+                ...todo.subtasks,
+                {
+                  id: createSubtaskId(todo.subtasks),
+                  title: trimmedTitle,
+                  completed: false,
+                },
+              ],
+            }
+          : todo,
+      ),
+    );
+  }
+
+  /**
+   * 指定したサブタスクの完了状態を反転します。
+   *
+   * @param todoId 対象 Todo の ID。
+   * @param subtaskId 対象サブタスクの ID。
+   */
+  function toggleSubtaskCompleted(todoId: number, subtaskId: number) {
+    hasChangedTodosRef.current = true;
+
+    setTodoItems((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === todoId
+          ? {
+              ...todo,
+              subtasks: todo.subtasks.map((subtask) =>
+                subtask.id === subtaskId
+                  ? { ...subtask, completed: !subtask.completed }
+                  : subtask,
+              ),
+            }
+          : todo,
+      ),
+    );
+  }
+
+  /**
+   * 指定したサブタスクのタイトルを更新します。
+   *
+   * @param todoId 対象 Todo の ID。
+   * @param subtaskId 対象サブタスクの ID。
+   * @param title 更新後のタイトル。
+   */
+  function updateSubtask(todoId: number, subtaskId: number, title: string) {
+    const trimmedTitle = title.trim();
+
+    if (trimmedTitle.length === 0) {
+      return;
+    }
+
+    hasChangedTodosRef.current = true;
+
+    setTodoItems((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === todoId
+          ? {
+              ...todo,
+              subtasks: todo.subtasks.map((subtask) =>
+                subtask.id === subtaskId ? { ...subtask, title: trimmedTitle } : subtask,
+              ),
+            }
+          : todo,
+      ),
+    );
+  }
+
+  /**
+   * 指定したサブタスクを削除します。
+   *
+   * @param todoId 対象 Todo の ID。
+   * @param subtaskId 削除するサブタスクの ID。
+   */
+  function deleteSubtask(todoId: number, subtaskId: number) {
+    hasChangedTodosRef.current = true;
+
+    setTodoItems((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === todoId
+          ? {
+              ...todo,
+              subtasks: todo.subtasks.filter((subtask) => subtask.id !== subtaskId),
+            }
+          : todo,
+      ),
+    );
   }
 
   return (
@@ -549,6 +715,7 @@ export function TodoList({ todos }: TodoListProps) {
             dueDate={todo.dueDate}
             priority={todo.priority}
             tags={todo.tags}
+            subtasks={todo.subtasks}
             priorityOptions={priorityOptions}
             completed={todo.completed}
             onToggle={() => toggleTodoCompleted(todo.id)}
@@ -556,6 +723,10 @@ export function TodoList({ todos }: TodoListProps) {
             onUpdateTodo={(title, memo, dueDate, priority, tags) =>
               updateTodo(todo.id, title, memo, dueDate, priority, tags)
             }
+            onAddSubtask={(title) => addSubtask(todo.id, title)}
+            onToggleSubtask={(subtaskId) => toggleSubtaskCompleted(todo.id, subtaskId)}
+            onUpdateSubtask={(subtaskId, title) => updateSubtask(todo.id, subtaskId, title)}
+            onDeleteSubtask={(subtaskId) => deleteSubtask(todo.id, subtaskId)}
           />
         ))}
       </div>

@@ -11,7 +11,18 @@ export type Todo = {
   priority: TodoPriority;
   /** Todo に付けるタグ一覧。 */
   tags: string[];
+  /** Todo に紐づくサブタスク一覧。 */
+  subtasks: TodoSubtask[];
   /** Todo が完了済みかどうか。 */
+  completed: boolean;
+};
+
+export type TodoSubtask = {
+  /** サブタスクの一意な ID。 */
+  id: number;
+  /** サブタスクのタイトル。 */
+  title: string;
+  /** サブタスクが完了済みかどうか。 */
   completed: boolean;
 };
 

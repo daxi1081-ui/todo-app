@@ -14,6 +14,7 @@ export function AddButton({ disabled = false }: AddButtonProps) {
   return (
     <button
       type="submit"
+      aria-label="Todoを追加"
       className="rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
       disabled={disabled}
     >
