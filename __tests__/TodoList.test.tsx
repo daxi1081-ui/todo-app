@@ -33,6 +33,7 @@ const todos: Todo[] = [
     memo: "腕立てを20回",
     dueDate: today,
     priority: "low",
+    repeat: "none",
     tags: ["#健康"],
     subtasks: [],
     completed: false,
@@ -43,6 +44,7 @@ const todos: Todo[] = [
     memo: "公園を一周",
     dueDate: tomorrow,
     priority: "high",
+    repeat: "none",
     tags: ["#外出"],
     subtasks: [],
     completed: false,
@@ -53,6 +55,7 @@ const todos: Todo[] = [
     memo: "",
     dueDate: "",
     priority: "medium",
+    repeat: "none",
     tags: ["#生活"],
     subtasks: [],
     completed: true,
@@ -95,6 +98,7 @@ test("localStorage に Todo がある場合、その Todo が表示される", a
         memo: "",
         dueDate: "",
         priority: "none",
+        repeat: "none",
         tags: [],
         subtasks: [],
         completed: false,
@@ -255,6 +259,7 @@ test("Todo を追加できる", () => {
   const memoInput = screen.getByLabelText("追加する Todo メモ") as HTMLTextAreaElement;
   const dueDateInput = screen.getByLabelText("追加する Todo 期限日") as HTMLInputElement;
   const priorityInput = screen.getByLabelText("追加する Todo 優先度") as HTMLSelectElement;
+  const repeatInput = screen.getByLabelText("Todoの繰り返し設定") as HTMLSelectElement;
   const tagsInput = screen.getByLabelText("追加する Todo タグ") as HTMLInputElement;
 
   fireEvent.change(input, { target: { value: "読書" } });
@@ -265,6 +270,7 @@ test("Todo を追加できる", () => {
   expect(memoInput.value).toBe("");
   expect(dueDateInput.value).toBe("");
   expect(priorityInput.value).toBe("none");
+  expect(repeatInput.value).toBe("none");
   expect(tagsInput.value).toBe("");
 });
 
@@ -345,6 +351,69 @@ test("優先度なし Todo も追加できる", async () => {
 
     expect(storedTodos.find((todo) => todo.title === "読書")?.priority).toBe("none");
   });
+});
+
+test("繰り返しなしのTodoを追加できる", async () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
+
+  expect(screen.getByText("読書")).toBeDefined();
+  expect(screen.queryByText("繰り返し: なし", { selector: "span" })).toBeNull();
+
+  await waitFor(() => {
+    const storedTodos = JSON.parse(localStorage.getItem(todoStorageKey) ?? "[]") as Todo[];
+
+    expect(storedTodos.find((todo) => todo.title === "読書")?.repeat).toBe("none");
+  });
+});
+
+test("毎日の繰り返しTodoを追加できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("Todoの繰り返し設定"), {
+    target: { value: "daily" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
+
+  expect(screen.getByText("読書")).toBeDefined();
+  expect(screen.getByText("繰り返し: 毎日", { selector: "span" })).toBeDefined();
+});
+
+test("毎週の繰り返しTodoを追加できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("Todoの繰り返し設定"), {
+    target: { value: "weekly" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
+
+  expect(screen.getByText("読書")).toBeDefined();
+  expect(screen.getByText("繰り返し: 毎週", { selector: "span" })).toBeDefined();
+});
+
+test("毎月の繰り返しTodoを追加できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("Todoの繰り返し設定"), {
+    target: { value: "monthly" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
+
+  expect(screen.getByText("読書")).toBeDefined();
+  expect(screen.getByText("繰り返し: 毎月", { selector: "span" })).toBeDefined();
 });
 
 test("タグ付き Todo を追加できる", () => {
@@ -490,6 +559,24 @@ test("Todo 追加後に localStorage へ優先度も保存される", async () =
   });
 });
 
+test("localStorageにrepeatが保存される", async () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("Todoの繰り返し設定"), {
+    target: { value: "weekly" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
+
+  await waitFor(() => {
+    const storedTodos = JSON.parse(localStorage.getItem(todoStorageKey) ?? "[]") as Todo[];
+
+    expect(storedTodos.find((todo) => todo.title === "読書")?.repeat).toBe("weekly");
+  });
+});
+
 test("Todo 追加後に localStorage へタグも保存される", async () => {
   render(<TodoList todos={todos} />);
 
@@ -547,6 +634,32 @@ test("localStorage から優先度も復元できる", async () => {
   await waitFor(() => {
     expect(screen.getByText("保存済み Todo")).toBeDefined();
     expect(screen.getAllByText("優先度: 高").length).toBeGreaterThan(0);
+  });
+});
+
+test("localStorageからrepeatが復元される", async () => {
+  localStorage.setItem(
+    todoStorageKey,
+    JSON.stringify([
+      {
+        id: 10,
+        title: "保存済み Todo",
+        memo: "",
+        dueDate: "",
+        priority: "none",
+        repeat: "monthly",
+        tags: [],
+        subtasks: [],
+        completed: false,
+      },
+    ]),
+  );
+
+  render(<TodoList todos={todos} />);
+
+  await waitFor(() => {
+    expect(screen.getByText("保存済み Todo")).toBeDefined();
+    expect(screen.getByText("繰り返し: 毎月", { selector: "span" })).toBeDefined();
   });
 });
 
@@ -667,6 +780,31 @@ test("subtasks がない既存データでも画面が壊れない", async () =>
   await waitFor(() => {
     expect(screen.getByText("古い Todo")).toBeDefined();
     expect(screen.getByText("サブタスク: 0/0")).toBeDefined();
+  });
+});
+
+test("repeatがない古いlocalStorageデータでも画面が壊れない", async () => {
+  localStorage.setItem(
+    todoStorageKey,
+    JSON.stringify([
+      {
+        id: 10,
+        title: "古い Todo",
+        memo: "",
+        dueDate: "",
+        priority: "none",
+        tags: [],
+        subtasks: [],
+        completed: false,
+      },
+    ]),
+  );
+
+  render(<TodoList todos={todos} />);
+
+  await waitFor(() => {
+    expect(screen.getByText("古い Todo")).toBeDefined();
+    expect(screen.queryByText("繰り返し: なし", { selector: "span" })).toBeNull();
   });
 });
 
@@ -798,6 +936,18 @@ test("優先度を編集できる", () => {
   fireEvent.click(screen.getByRole("button", { name: "Todoを保存" }));
 
   expect(screen.getAllByText("優先度: 高").length).toBeGreaterThan(0);
+});
+
+test("Todo編集時に繰り返し設定を変更できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("筋トレの繰り返し設定を変更"), {
+    target: { value: "daily" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Todoを保存" }));
+
+  expect(screen.getByText("繰り返し: 毎日", { selector: "span" })).toBeDefined();
 });
 
 test("タグを編集できる", () => {

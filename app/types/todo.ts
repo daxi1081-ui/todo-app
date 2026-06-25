@@ -9,6 +9,8 @@ export type Todo = {
   dueDate: string;
   /** Todo の優先度。 */
   priority: TodoPriority;
+  /** Todo の繰り返し設定。 */
+  repeat: TodoRepeat;
   /** Todo に付けるタグ一覧。 */
   tags: string[];
   /** Todo に紐づくサブタスク一覧。 */
@@ -27,6 +29,8 @@ export type TodoSubtask = {
 };
 
 export type TodoPriority = "none" | "low" | "medium" | "high";
+
+export type TodoRepeat = "none" | "daily" | "weekly" | "monthly";
 
 export type TodoFilter = "all" | "active" | "completed" | "today" | "scheduled";
 
@@ -51,4 +55,11 @@ export type TodoPriorityOption = {
   label: string;
   /** 優先度の値。 */
   value: TodoPriority;
+};
+
+export type TodoRepeatOption = {
+  /** 繰り返しセレクトや表示に使うラベル。 */
+  label: string;
+  /** 繰り返し設定の値。 */
+  value: TodoRepeat;
 };

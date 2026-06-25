@@ -4,7 +4,13 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 
 import { parseTags } from "../utils/tags";
-import type { TodoPriority, TodoPriorityOption, TodoSubtask } from "../types/todo";
+import type {
+  TodoPriority,
+  TodoPriorityOption,
+  TodoRepeat,
+  TodoRepeatOption,
+  TodoSubtask,
+} from "../types/todo";
 
 type TodoItemProps = {
   /** 一覧に表示する Todo タイトル。 */
@@ -15,12 +21,16 @@ type TodoItemProps = {
   dueDate: string;
   /** 一覧に表示する Todo 優先度。 */
   priority: TodoPriority;
+  /** 一覧に表示する Todo 繰り返し設定。 */
+  repeat: TodoRepeat;
   /** 一覧に表示する Todo タグ一覧。 */
   tags: string[];
   /** 一覧に表示するサブタスク一覧。 */
   subtasks: TodoSubtask[];
   /** 優先度の選択肢。 */
   priorityOptions: TodoPriorityOption[];
+  /** 繰り返し設定の選択肢。 */
+  repeatOptions: TodoRepeatOption[];
   /** 完了済みかどうか。 */
   completed: boolean;
   /** 完了状態を切り替える処理。 */
@@ -33,6 +43,7 @@ type TodoItemProps = {
     memo: string,
     dueDate: string,
     priority: TodoPriority,
+    repeat: TodoRepeat,
     tags: string[],
   ) => void;
   /** サブタスクを追加する処理。 */
@@ -67,6 +78,17 @@ function getPriorityLabel(priority: TodoPriority, options: TodoPriorityOption[])
 }
 
 /**
+ * 繰り返し設定の表示ラベルを返します。
+ *
+ * @param repeat 繰り返し設定。
+ * @param options 繰り返し設定の選択肢。
+ * @returns 繰り返し設定の表示ラベル。
+ */
+function getRepeatLabel(repeat: TodoRepeat, options: TodoRepeatOption[]) {
+  return options.find((option) => option.value === repeat)?.label ?? "なし";
+}
+
+/**
  * Todo を 1 件分表示し、完了切り替え、編集、削除を扱います。
  *
  * @param props Todo 表示に必要な情報。
@@ -74,9 +96,11 @@ function getPriorityLabel(priority: TodoPriority, options: TodoPriorityOption[])
  * @param props.memo 表示する Todo メモ。
  * @param props.dueDate 表示する Todo 期限日。
  * @param props.priority 表示する Todo 優先度。
+ * @param props.repeat 表示する Todo 繰り返し設定。
  * @param props.tags 表示する Todo タグ一覧。
  * @param props.subtasks 表示するサブタスク一覧。
  * @param props.priorityOptions 優先度の選択肢。
+ * @param props.repeatOptions 繰り返し設定の選択肢。
  * @param props.completed 完了済みかどうか。
  * @param props.onToggle 完了状態を切り替える処理。
  * @param props.onDelete Todo を削除する処理。
@@ -88,9 +112,11 @@ export function TodoItem({
   memo,
   dueDate,
   priority,
+  repeat,
   tags,
   subtasks,
   priorityOptions,
+  repeatOptions,
   completed,
   onToggle,
   onDelete,
@@ -104,6 +130,7 @@ export function TodoItem({
   const editMemoInputId = useId();
   const editDueDateInputId = useId();
   const editPriorityInputId = useId();
+  const editRepeatInputId = useId();
   const editTagsInputId = useId();
   const editInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -111,12 +138,14 @@ export function TodoItem({
   const [editingMemo, setEditingMemo] = useState(memo);
   const [editingDueDate, setEditingDueDate] = useState(dueDate);
   const [editingPriority, setEditingPriority] = useState<TodoPriority>(priority);
+  const [editingRepeat, setEditingRepeat] = useState<TodoRepeat>(repeat);
   const [editingTags, setEditingTags] = useState(tags.join(", "));
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [editingSubtaskId, setEditingSubtaskId] = useState<number | null>(null);
   const [editingSubtaskTitle, setEditingSubtaskTitle] = useState("");
   const trimmedEditingTitle = editingTitle.trim();
   const priorityLabel = getPriorityLabel(priority, priorityOptions);
+  const repeatLabel = getRepeatLabel(repeat, repeatOptions);
   const completedSubtaskCount = subtasks.filter((subtask) => subtask.completed).length;
 
   useEffect(() => {
@@ -136,6 +165,7 @@ export function TodoItem({
     setEditingMemo(memo);
     setEditingDueDate(dueDate);
     setEditingPriority(priority);
+    setEditingRepeat(repeat);
     setEditingTags(tags.join(", "));
     setIsEditing(true);
   }
@@ -148,6 +178,7 @@ export function TodoItem({
     setEditingMemo(memo);
     setEditingDueDate(dueDate);
     setEditingPriority(priority);
+    setEditingRepeat(repeat);
     setEditingTags(tags.join(", "));
     setIsEditing(false);
   }
@@ -169,6 +200,7 @@ export function TodoItem({
       editingMemo.trim(),
       editingDueDate,
       editingPriority,
+      editingRepeat,
       parseTags(editingTags),
     );
     setIsEditing(false);
@@ -307,6 +339,22 @@ export function TodoItem({
               </option>
             ))}
           </select>
+          <label htmlFor={editRepeatInputId} className="sr-only">
+            Todo 繰り返し設定を編集
+          </label>
+          <select
+            id={editRepeatInputId}
+            aria-label={`${title}の繰り返し設定を変更`}
+            value={editingRepeat}
+            onChange={(event) => setEditingRepeat(event.target.value as TodoRepeat)}
+            className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+          >
+            {repeatOptions.map((repeatOption) => (
+              <option key={repeatOption.value} value={repeatOption.value}>
+                繰り返し: {repeatOption.label}
+              </option>
+            ))}
+          </select>
           <label htmlFor={editTagsInputId} className="sr-only">
             Todo タグを編集
           </label>
@@ -378,6 +426,17 @@ export function TodoItem({
                 }
               >
                 優先度: {priorityLabel}
+              </span>
+            ) : null}
+            {repeat !== "none" ? (
+              <span
+                className={
+                  completed
+                    ? "ml-2 mt-2 inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400"
+                    : "ml-2 mt-2 inline-flex rounded-full bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700"
+                }
+              >
+                繰り返し: {repeatLabel}
               </span>
             ) : null}
             {tags.length > 0 ? (

@@ -12,6 +12,8 @@ import type {
   TodoFilterOption,
   TodoPriority,
   TodoPriorityOption,
+  TodoRepeat,
+  TodoRepeatOption,
   TodoSort,
   TodoSortOption,
   TodoSubtask,
@@ -35,6 +37,13 @@ const priorityOptions: TodoPriorityOption[] = [
   { label: "低", value: "low" },
   { label: "中", value: "medium" },
   { label: "高", value: "high" },
+];
+
+const repeatOptions: TodoRepeatOption[] = [
+  { label: "なし", value: "none" },
+  { label: "毎日", value: "daily" },
+  { label: "毎週", value: "weekly" },
+  { label: "毎月", value: "monthly" },
 ];
 
 const sortOptions: TodoSortOption[] = [
@@ -61,6 +70,16 @@ const todoSortStorageKey = "todo-app.sort";
  */
 function isTodoPriority(value: unknown): value is TodoPriority {
   return value === "none" || value === "low" || value === "medium" || value === "high";
+}
+
+/**
+ * 繰り返し設定として扱える値かどうかを判定します。
+ *
+ * @param value 判定する値。
+ * @returns 繰り返し設定として扱える場合は true。
+ */
+function isTodoRepeat(value: unknown): value is TodoRepeat {
+  return value === "none" || value === "daily" || value === "weekly" || value === "monthly";
 }
 
 /**
@@ -138,6 +157,7 @@ function normalizeStoredTodo(value: unknown): Todo | null {
     memo: typeof todo.memo === "string" ? todo.memo : "",
     dueDate: typeof todo.dueDate === "string" ? todo.dueDate : "",
     priority: isTodoPriority(todo.priority) ? todo.priority : "none",
+    repeat: isTodoRepeat(todo.repeat) ? todo.repeat : "none",
     tags: Array.isArray(todo.tags)
       ? todo.tags
           .filter((tag): tag is string => typeof tag === "string")
@@ -340,6 +360,7 @@ export function TodoList({ todos }: TodoListProps) {
   const [newTodoMemo, setNewTodoMemo] = useState("");
   const [newTodoDueDate, setNewTodoDueDate] = useState("");
   const [newTodoPriority, setNewTodoPriority] = useState<TodoPriority>("none");
+  const [newTodoRepeat, setNewTodoRepeat] = useState<TodoRepeat>("none");
   const [newTodoTags, setNewTodoTags] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<TodoFilter>("all");
@@ -410,13 +431,14 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
-   * 指定した Todo のタイトル、メモ、期限日、優先度、タグを更新します。
+   * 指定した Todo のタイトル、メモ、期限日、優先度、繰り返し設定、タグを更新します。
    *
    * @param id 更新する Todo の ID。
    * @param title 更新後のタイトル。
    * @param memo 更新後のメモ。
    * @param dueDate 更新後の期限日。
    * @param priority 更新後の優先度。
+   * @param repeat 更新後の繰り返し設定。
    * @param tags 更新後のタグ一覧。
    */
   function updateTodo(
@@ -425,6 +447,7 @@ export function TodoList({ todos }: TodoListProps) {
     memo: string,
     dueDate: string,
     priority: TodoPriority,
+    repeat: TodoRepeat,
     tags: string[],
   ) {
     const trimmedTitle = title.trim();
@@ -438,7 +461,7 @@ export function TodoList({ todos }: TodoListProps) {
     setTodoItems((currentTodos) =>
       currentTodos.map((todo) =>
         todo.id === id
-          ? { ...todo, title: trimmedTitle, memo, dueDate, priority, tags }
+          ? { ...todo, title: trimmedTitle, memo, dueDate, priority, repeat, tags }
           : todo,
       ),
     );
@@ -472,7 +495,7 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
-   * 入力されたタイトル、メモ、期限日、優先度、タグで未完了の Todo を追加します。
+   * 入力されたタイトル、メモ、期限日、優先度、繰り返し設定、タグで未完了の Todo を追加します。
    *
    * @param event フォーム送信イベント。
    */
@@ -495,6 +518,7 @@ export function TodoList({ todos }: TodoListProps) {
         memo: newTodoMemo.trim(),
         dueDate: newTodoDueDate,
         priority: newTodoPriority,
+        repeat: newTodoRepeat,
         tags: parseTags(newTodoTags),
         subtasks: [],
         completed: false,
@@ -504,6 +528,7 @@ export function TodoList({ todos }: TodoListProps) {
     setNewTodoMemo("");
     setNewTodoDueDate("");
     setNewTodoPriority("none");
+    setNewTodoRepeat("none");
     setNewTodoTags("");
   }
 
@@ -714,14 +739,16 @@ export function TodoList({ todos }: TodoListProps) {
             memo={todo.memo}
             dueDate={todo.dueDate}
             priority={todo.priority}
+            repeat={todo.repeat}
             tags={todo.tags}
             subtasks={todo.subtasks}
             priorityOptions={priorityOptions}
+            repeatOptions={repeatOptions}
             completed={todo.completed}
             onToggle={() => toggleTodoCompleted(todo.id)}
             onDelete={() => deleteTodo(todo.id)}
-            onUpdateTodo={(title, memo, dueDate, priority, tags) =>
-              updateTodo(todo.id, title, memo, dueDate, priority, tags)
+            onUpdateTodo={(title, memo, dueDate, priority, repeat, tags) =>
+              updateTodo(todo.id, title, memo, dueDate, priority, repeat, tags)
             }
             onAddSubtask={(title) => addSubtask(todo.id, title)}
             onToggleSubtask={(subtaskId) => toggleSubtaskCompleted(todo.id, subtaskId)}
@@ -777,6 +804,22 @@ export function TodoList({ todos }: TodoListProps) {
           {priorityOptions.map((priority) => (
             <option key={priority.value} value={priority.value}>
               優先度: {priority.label}
+            </option>
+          ))}
+        </select>
+        <label htmlFor="new-todo-repeat" className="sr-only">
+          Todoの繰り返し設定
+        </label>
+        <select
+          id="new-todo-repeat"
+          aria-label="Todoの繰り返し設定"
+          value={newTodoRepeat}
+          onChange={(event) => setNewTodoRepeat(event.target.value as TodoRepeat)}
+          className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition focus:border-blue-400"
+        >
+          {repeatOptions.map((repeat) => (
+            <option key={repeat.value} value={repeat.value}>
+              繰り返し: {repeat.label}
             </option>
           ))}
         </select>
