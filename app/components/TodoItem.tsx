@@ -162,6 +162,8 @@ export function TodoItem({
   const repeatLabel = getRepeatLabel(repeat, repeatOptions);
   const completedSubtaskCount = subtasks.filter((subtask) => subtask.completed).length;
   const isOverdue = !completed && dueDate.length > 0 && dueDate < toDateInputValue(new Date());
+  const subtaskProgressPercent =
+    subtasks.length > 0 ? Math.round((completedSubtaskCount / subtasks.length) * 100) : 0;
 
   useEffect(() => {
     if (!isEditing) {
@@ -293,11 +295,15 @@ export function TodoItem({
   }
 
   return (
-    <div className="border-b border-gray-100 px-4 py-4 last:border-b-0">
-      <div className="flex items-start gap-3">
+    <div className="border-b border-gray-100 px-4 py-5 transition hover:bg-gray-50/70 last:border-b-0">
+      <div className="flex items-start gap-4">
       <button
         type="button"
-        className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-gray-300 text-sm font-bold text-blue-600 transition hover:border-blue-400"
+        className={
+          completed
+            ? "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500 bg-blue-500 text-sm font-bold text-white transition hover:bg-blue-600"
+            : "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-sm font-bold text-blue-600 transition hover:border-blue-400 hover:bg-blue-50"
+        }
         aria-label={completed ? "未完了に戻す" : "完了にする"}
         aria-pressed={completed}
         onClick={onToggle}
@@ -400,12 +406,12 @@ export function TodoItem({
         </form>
       ) : (
         <>
-          <button type="button" className="min-w-0 flex-1 text-left" onClick={onToggle}>
+          <button type="button" className="grid min-w-0 flex-1 gap-2 text-left" onClick={onToggle}>
             <span
               className={
                 completed
-                  ? "block truncate text-gray-400 line-through"
-                  : "block truncate text-gray-900"
+                  ? "block truncate text-base font-semibold leading-6 text-gray-400 line-through"
+                  : "block truncate text-base font-semibold leading-6 text-gray-950"
               }
             >
               {title}
@@ -414,48 +420,70 @@ export function TodoItem({
               <span
                 className={
                   completed
-                    ? "mt-1 block whitespace-pre-wrap break-words text-sm text-gray-400"
-                    : "mt-1 block whitespace-pre-wrap break-words text-sm text-gray-500"
+                    ? "block max-h-10 overflow-hidden whitespace-pre-wrap break-words text-sm leading-5 text-gray-400"
+                    : "block max-h-10 overflow-hidden whitespace-pre-wrap break-words text-sm leading-5 text-gray-500"
                 }
               >
                 {memo}
               </span>
             ) : null}
-            {dueDate.length > 0 ? (
-              <span
-                className={
-                  completed
-                    ? "mt-2 inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400"
-                    : isOverdue
-                      ? "mt-2 inline-flex rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700"
-                    : "mt-2 inline-flex rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700"
-                }
-              >
-                期限日: {formatDueDate(dueDate)}
-              </span>
-            ) : null}
-            {priority !== "none" ? (
-              <span
-                className={
-                  completed
-                    ? "ml-2 mt-2 inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400"
-                    : "ml-2 mt-2 inline-flex rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700"
-                }
-              >
-                優先度: {priorityLabel}
-              </span>
-            ) : null}
-            {repeat !== "none" ? (
-              <span
-                className={
-                  completed
-                    ? "ml-2 mt-2 inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400"
-                    : "ml-2 mt-2 inline-flex rounded-full bg-violet-50 px-2 py-1 text-xs font-semibold text-violet-700"
-                }
-              >
-                繰り返し: {repeatLabel}
-              </span>
-            ) : null}
+            <span className="flex flex-wrap items-center gap-2">
+              {dueDate.length > 0 ? (
+                <span
+                  className={
+                    completed
+                      ? "inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400"
+                      : isOverdue
+                        ? "inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-red-100"
+                        : "inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100"
+                  }
+                >
+                  <span aria-hidden="true">📅</span>
+                  <span
+                    className={
+                      completed
+                        ? "text-gray-400"
+                        : isOverdue
+                          ? "text-red-700"
+                          : "text-blue-700"
+                    }
+                  >
+                    期限日: {formatDueDate(dueDate)}
+                  </span>
+                  {isOverdue ? <span className="font-bold">期限切れ</span> : null}
+                </span>
+              ) : null}
+              {priority !== "none" ? (
+                <span
+                  className={
+                    completed
+                      ? "inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400"
+                      : "inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-100"
+                  }
+                >
+                  <span
+                    aria-hidden="true"
+                    className={
+                      completed
+                        ? "h-1.5 w-1.5 rounded-full bg-gray-300"
+                        : "h-1.5 w-1.5 rounded-full bg-amber-500"
+                    }
+                  />
+                  優先度: {priorityLabel}
+                </span>
+              ) : null}
+              {repeat !== "none" ? (
+                <span
+                  className={
+                    completed
+                      ? "inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400"
+                      : "inline-flex rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-violet-100"
+                  }
+                >
+                  繰り返し: {repeatLabel}
+                </span>
+              ) : null}
+            </span>
             {tags.length > 0 ? (
               <span className="mt-2 flex flex-wrap gap-1">
                 {tags.map((tag) => (
@@ -463,8 +491,8 @@ export function TodoItem({
                     key={tag}
                     className={
                       completed
-                        ? "inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400"
-                        : "inline-flex rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700"
+                        ? "inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400"
+                        : "inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100"
                     }
                   >
                     {tag}
@@ -472,8 +500,16 @@ export function TodoItem({
                 ))}
               </span>
             ) : null}
-            <span className="mt-2 block text-xs font-semibold text-gray-500">
-              サブタスク: {completedSubtaskCount}/{subtasks.length}
+            <span className="mt-1 grid gap-1 text-xs font-semibold text-gray-500">
+              <span>サブタスク: {completedSubtaskCount}/{subtasks.length}</span>
+              {subtasks.length > 0 ? (
+                <span className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                  <span
+                    className="block h-full rounded-full bg-blue-500"
+                    style={{ width: `${subtaskProgressPercent}%` }}
+                  />
+                </span>
+              ) : null}
             </span>
           </button>
 
