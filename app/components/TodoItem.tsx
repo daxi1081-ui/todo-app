@@ -67,6 +67,20 @@ function formatDueDate(dueDate: string) {
 }
 
 /**
+ * 日付入力と比較するためのローカル日付文字列を返します。
+ *
+ * @param date 変換する日付。
+ * @returns YYYY-MM-DD 形式の日付文字列。
+ */
+function toDateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * 優先度の表示ラベルを返します。
  *
  * @param priority 優先度。
@@ -147,6 +161,7 @@ export function TodoItem({
   const priorityLabel = getPriorityLabel(priority, priorityOptions);
   const repeatLabel = getRepeatLabel(repeat, repeatOptions);
   const completedSubtaskCount = subtasks.filter((subtask) => subtask.completed).length;
+  const isOverdue = !completed && dueDate.length > 0 && dueDate < toDateInputValue(new Date());
 
   useEffect(() => {
     if (!isEditing) {
@@ -411,6 +426,8 @@ export function TodoItem({
                 className={
                   completed
                     ? "mt-2 inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-400"
+                    : isOverdue
+                      ? "mt-2 inline-flex rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700"
                     : "mt-2 inline-flex rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700"
                 }
               >

@@ -272,7 +272,7 @@ function filterTodos(todos: Todo[], filter: TodoFilter) {
   if (filter === "today") {
     const today = toDateInputValue(new Date());
 
-    return todos.filter((todo) => todo.dueDate === today);
+    return todos.filter((todo) => todo.dueDate === today || todo.repeat === "daily");
   }
 
   if (filter === "scheduled") {

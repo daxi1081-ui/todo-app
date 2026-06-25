@@ -25,6 +25,7 @@ function formatDueDate(dueDate: string) {
 
 const today = createRelativeDateInputValue(0);
 const tomorrow = createRelativeDateInputValue(1);
+const yesterday = createRelativeDateInputValue(-1);
 
 const todos: Todo[] = [
   {
@@ -156,6 +157,31 @@ test("今日を選ぶと今日期限の Todo だけ表示される", () => {
   expect(screen.getByText("筋トレ")).toBeDefined();
   expect(screen.queryByText("散歩")).toBeNull();
   expect(screen.queryByText("買い物")).toBeNull();
+});
+
+test("今日フィルタに毎日繰り返しTodoが表示される", () => {
+  const todosWithDailyRepeat: Todo[] = [
+    ...todos,
+    {
+      id: 4,
+      title: "英単語",
+      memo: "",
+      dueDate: "",
+      priority: "none",
+      repeat: "daily",
+      tags: [],
+      subtasks: [],
+      completed: false,
+    },
+  ];
+
+  render(<TodoList todos={todosWithDailyRepeat} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "今日" }));
+
+  expect(screen.getByText("筋トレ")).toBeDefined();
+  expect(screen.getByText("英単語")).toBeDefined();
+  expect(screen.queryByText("散歩")).toBeNull();
 });
 
 test("予定を選ぶと期限日付き未完了 Todo だけ表示される", () => {
@@ -302,6 +328,55 @@ test("期限日付き Todo を追加できる", () => {
 
   expect(screen.getByText("読書")).toBeDefined();
   expect(screen.getAllByText(`期限日: ${formatDueDate(tomorrow)}`).length).toBeGreaterThan(0);
+});
+
+test("期限切れ未完了Todoの期限日が赤色で表示される", () => {
+  const overdueTodos: Todo[] = [
+    {
+      id: 1,
+      title: "期限切れ Todo",
+      memo: "",
+      dueDate: yesterday,
+      priority: "none",
+      repeat: "none",
+      tags: [],
+      subtasks: [],
+      completed: false,
+    },
+  ];
+
+  render(<TodoList todos={overdueTodos} />);
+
+  const dueDateLabel = screen.getByText(`期限日: ${formatDueDate(yesterday)}`, {
+    selector: "span",
+  });
+
+  expect(dueDateLabel.className).toContain("text-red-700");
+});
+
+test("完了済みTodoは期限切れでも赤色表示にならない", () => {
+  const completedOverdueTodos: Todo[] = [
+    {
+      id: 1,
+      title: "完了済み期限切れ Todo",
+      memo: "",
+      dueDate: yesterday,
+      priority: "none",
+      repeat: "none",
+      tags: [],
+      subtasks: [],
+      completed: true,
+    },
+  ];
+
+  render(<TodoList todos={completedOverdueTodos} />);
+
+  const dueDateLabel = screen.getByText(`期限日: ${formatDueDate(yesterday)}`, {
+    selector: "span",
+  });
+
+  expect(dueDateLabel.className).not.toContain("text-red-700");
+  expect(dueDateLabel.className).toContain("text-gray-400");
 });
 
 test("期限日なし Todo も追加できる", async () => {
