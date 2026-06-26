@@ -238,6 +238,54 @@ test("優先度が高い順で並び替えできる", () => {
   expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
 });
 
+test("メニューを開くと検索欄が表示される", () => {
+  render(<TodoList todos={todos} />);
+
+  const menuButton = screen.getByRole("button", { name: "絞り込み・並び替えメニューを開く" });
+
+  expect(menuButton.getAttribute("aria-expanded")).toBe("false");
+  fireEvent.click(menuButton);
+
+  expect(screen.getByRole("button", { name: "絞り込み・並び替えメニューを閉じる" }).getAttribute("aria-expanded")).toBe(
+    "true",
+  );
+  expect(screen.getByLabelText("Todo 検索")).toBeDefined();
+});
+
+test("メニュー内の検索欄で検索できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "絞り込み・並び替えメニューを開く" }));
+  fireEvent.change(screen.getByLabelText("Todo 検索"), {
+    target: { value: "散歩" },
+  });
+
+  expect(screen.queryByText("筋トレ")).toBeNull();
+  expect(screen.getByText("散歩")).toBeDefined();
+  expect(screen.queryByText("買い物")).toBeNull();
+  expect(screen.getByText("検索中")).toBeDefined();
+});
+
+test("メニューを開くと表示順序を選択できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "絞り込み・並び替えメニューを開く" }));
+
+  expect(screen.getByLabelText("Todo 並び替え")).toBeDefined();
+});
+
+test("メニュー内の表示順序変更で並び替えが動作する", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "絞り込み・並び替えメニューを開く" }));
+  fireEvent.change(screen.getByLabelText("Todo 並び替え"), {
+    target: { value: "priority" },
+  });
+
+  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+  expect(screen.getByText("優先度が高い順", { selector: "span" })).toBeDefined();
+});
+
 test("並び替え状態が localStorage に保存される", async () => {
   render(<TodoList todos={todos} />);
 
@@ -372,7 +420,7 @@ test("期限日付き Todo を追加できる", () => {
   fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
 
   expect(screen.getByText("読書")).toBeDefined();
-  expect(screen.getAllByText(`期限日: ${formatDueDate(tomorrow)}`).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(formatDueDate(tomorrow)).length).toBeGreaterThan(0);
 });
 
 test("期限切れ未完了Todoの期限日が赤色で表示される", () => {
@@ -392,7 +440,7 @@ test("期限切れ未完了Todoの期限日が赤色で表示される", () => {
 
   render(<TodoList todos={overdueTodos} />);
 
-  const dueDateLabel = screen.getByText(`期限日: ${formatDueDate(yesterday)}`, {
+  const dueDateLabel = screen.getByText(formatDueDate(yesterday), {
     selector: "span",
   });
 
@@ -416,12 +464,19 @@ test("完了済みTodoは期限切れでも赤色表示にならない", () => {
 
   render(<TodoList todos={completedOverdueTodos} />);
 
-  const dueDateLabel = screen.getByText(`期限日: ${formatDueDate(yesterday)}`, {
+  const dueDateLabel = screen.getByText(formatDueDate(yesterday), {
     selector: "span",
   });
 
   expect(dueDateLabel.className).not.toContain("text-red-700");
   expect(dueDateLabel.className).toContain("text-gray-400");
+});
+
+test("期限日表示に「期限日:」が表示されない", () => {
+  render(<TodoList todos={todos} />);
+
+  expect(screen.getAllByText(formatDueDate(today)).length).toBeGreaterThan(0);
+  expect(screen.queryByText(/期限日:/)).toBeNull();
 });
 
 test("期限日なし Todo も追加できる", async () => {
@@ -503,7 +558,7 @@ test("毎日の繰り返しTodoを追加できる", () => {
   fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
 
   expect(screen.getByText("読書")).toBeDefined();
-  expect(screen.getByText("繰り返し: 毎日", { selector: "span" })).toBeDefined();
+  expect(screen.getByText("毎日", { selector: "span" })).toBeDefined();
 });
 
 test("毎週の繰り返しTodoを追加できる", () => {
@@ -518,7 +573,7 @@ test("毎週の繰り返しTodoを追加できる", () => {
   fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
 
   expect(screen.getByText("読書")).toBeDefined();
-  expect(screen.getByText("繰り返し: 毎週", { selector: "span" })).toBeDefined();
+  expect(screen.getByText("毎週", { selector: "span" })).toBeDefined();
 });
 
 test("毎月の繰り返しTodoを追加できる", () => {
@@ -533,7 +588,14 @@ test("毎月の繰り返しTodoを追加できる", () => {
   fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
 
   expect(screen.getByText("読書")).toBeDefined();
-  expect(screen.getByText("繰り返し: 毎月", { selector: "span" })).toBeDefined();
+  expect(screen.getByText("毎月", { selector: "span" })).toBeDefined();
+});
+
+test("繰り返し表示に「繰り返し:」が表示されない", () => {
+  render(<TodoList todos={[{ ...todos[0], repeat: "daily" }]} />);
+
+  expect(screen.getByText("毎日", { selector: "span" })).toBeDefined();
+  expect(screen.queryByText(/繰り返し:/, { selector: "span" })).toBeNull();
 });
 
 test("タグ付き Todo を追加できる", () => {
@@ -779,7 +841,7 @@ test("localStorageからrepeatが復元される", async () => {
 
   await waitFor(() => {
     expect(screen.getByText("保存済み Todo")).toBeDefined();
-    expect(screen.getByText("繰り返し: 毎月", { selector: "span" })).toBeDefined();
+    expect(screen.getByText("毎月", { selector: "span" })).toBeDefined();
   });
 });
 
@@ -825,7 +887,7 @@ test("localStorage から期限日も復元できる", async () => {
 
   await waitFor(() => {
     expect(screen.getByText("保存済み Todo")).toBeDefined();
-    expect(screen.getByText(`期限日: ${formatDueDate(tomorrow)}`)).toBeDefined();
+    expect(screen.getByText(formatDueDate(tomorrow))).toBeDefined();
   });
 });
 
@@ -1052,7 +1114,7 @@ test("期限日を編集できる", () => {
   });
   fireEvent.click(screen.getByRole("button", { name: "Todoを保存" }));
 
-  expect(screen.getAllByText(`期限日: ${formatDueDate(tomorrow)}`).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(formatDueDate(tomorrow)).length).toBeGreaterThan(0);
 });
 
 test("期限日を削除できる", () => {
@@ -1064,7 +1126,7 @@ test("期限日を削除できる", () => {
   });
   fireEvent.click(screen.getByRole("button", { name: "Todoを保存" }));
 
-  expect(screen.queryByText(`期限日: ${formatDueDate(today)}`)).toBeNull();
+  expect(screen.queryByText(formatDueDate(today))).toBeNull();
 });
 
 test("優先度を編集できる", () => {
@@ -1088,7 +1150,7 @@ test("Todo編集時に繰り返し設定を変更できる", () => {
   });
   fireEvent.click(screen.getByRole("button", { name: "Todoを保存" }));
 
-  expect(screen.getByText("繰り返し: 毎日", { selector: "span" })).toBeDefined();
+  expect(screen.getByText("毎日", { selector: "span" })).toBeDefined();
 });
 
 test("タグを編集できる", () => {

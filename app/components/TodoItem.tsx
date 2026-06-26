@@ -468,7 +468,7 @@ export function TodoItem({
                           : "text-blue-700"
                     }
                   >
-                    期限日: {formatDueDate(dueDate)}
+                    {formatDueDate(dueDate)}
                   </span>
                   {isOverdue ? <span className="font-bold">期限切れ</span> : null}
                 </span>
@@ -500,7 +500,7 @@ export function TodoItem({
                       : "inline-flex rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-violet-100"
                   }
                 >
-                  繰り返し: {repeatLabel}
+                  {repeatLabel}
                 </span>
               ) : null}
             </span>

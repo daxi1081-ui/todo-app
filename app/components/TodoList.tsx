@@ -363,6 +363,7 @@ export function TodoList({ todos }: TodoListProps) {
   const [newTodoRepeat, setNewTodoRepeat] = useState<TodoRepeat>("none");
   const [newTodoTags, setNewTodoTags] = useState("");
   const [isNewTodoDetailsOpen, setIsNewTodoDetailsOpen] = useState(false);
+  const [isControlMenuOpen, setIsControlMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<TodoFilter>("all");
   const [selectedSort, setSelectedSort] = useState<TodoSort>("created");
@@ -374,6 +375,8 @@ export function TodoList({ todos }: TodoListProps) {
     searchTodos(filterTodos(todoItems, selectedFilter), searchQuery),
     selectedSort,
   );
+  const selectedSortLabel = sortOptions.find((sort) => sort.value === selectedSort)?.label ?? "";
+  const hasSearchQuery = searchQuery.trim().length > 0;
 
   useEffect(() => {
     let isActive = true;
@@ -704,7 +707,37 @@ export function TodoList({ todos }: TodoListProps) {
         })}
       </div>
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto]">
+      <div className="mb-4 grid gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            aria-expanded={isControlMenuOpen}
+            aria-controls="todo-control-menu"
+            aria-label={
+              isControlMenuOpen ? "絞り込み・並び替えメニューを閉じる" : "絞り込み・並び替えメニューを開く"
+            }
+            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:text-gray-900"
+            onClick={() => setIsControlMenuOpen((isOpen) => !isOpen)}
+          >
+            絞り込み・並び替え
+          </button>
+          {hasSearchQuery ? (
+            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+              検索中
+            </span>
+          ) : null}
+          {selectedSort !== "created" ? (
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+              {selectedSortLabel}
+            </span>
+          ) : null}
+        </div>
+
+        <div
+          id="todo-control-menu"
+          className="grid gap-3 rounded-lg bg-white p-4 shadow-sm sm:grid-cols-[1fr_auto]"
+          hidden={!isControlMenuOpen}
+        >
         <label htmlFor="todo-search" className="sr-only">
           Todo 検索
         </label>
@@ -731,6 +764,7 @@ export function TodoList({ todos }: TodoListProps) {
             </option>
           ))}
         </select>
+      </div>
       </div>
 
       <div className="rounded-lg bg-white shadow-sm">
