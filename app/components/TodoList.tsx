@@ -47,7 +47,7 @@ const repeatOptions: TodoRepeatOption[] = [
 ];
 
 const sortOptions: TodoSortOption[] = [
-  { label: "作成順", value: "created" },
+  { label: "デフォルト", value: "created" },
   { label: "期限日が近い順", value: "dueDate" },
   { label: "優先度が高い順", value: "priority" },
 ];
@@ -319,6 +319,8 @@ function searchTodos(todos: Todo[], query: string) {
  */
 function sortTodos(todos: Todo[], sort: TodoSort) {
   const sortedTodos = [...todos];
+  const compareByPriorityThenCreated = (a: Todo, b: Todo) =>
+    priorityRank[b.priority] - priorityRank[a.priority] || a.id - b.id;
 
   if (sort === "dueDate") {
     return sortedTodos.sort((a, b) => {
@@ -339,12 +341,10 @@ function sortTodos(todos: Todo[], sort: TodoSort) {
   }
 
   if (sort === "priority") {
-    return sortedTodos.sort(
-      (a, b) => priorityRank[b.priority] - priorityRank[a.priority] || a.id - b.id,
-    );
+    return sortedTodos.sort(compareByPriorityThenCreated);
   }
 
-  return sortedTodos.sort((a, b) => a.id - b.id);
+  return sortedTodos.sort(compareByPriorityThenCreated);
 }
 
 /**

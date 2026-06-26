@@ -205,17 +205,35 @@ test("すべてに戻すと全件表示される", () => {
   expect(screen.getByText("買い物")).toBeDefined();
 });
 
-test("作成順で並び替えできる", () => {
+test("初期表示で優先度が高いTodoから表示される", () => {
+  render(<TodoList todos={todos} />);
+
+  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+});
+
+test("優先度が同じ場合は作成順で表示される", () => {
+  const samePriorityTodos: Todo[] = [
+    { ...todos[0], priority: "medium" },
+    { ...todos[1], priority: "high" },
+    { ...todos[2], priority: "high", completed: false },
+  ];
+
+  render(<TodoList todos={samePriorityTodos} />);
+
+  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+});
+
+test("デフォルト順で並び替えできる", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.change(screen.getByLabelText("Todo 並び替え"), {
-    target: { value: "priority" },
+    target: { value: "dueDate" },
   });
   fireEvent.change(screen.getByLabelText("Todo 並び替え"), {
     target: { value: "created" },
   });
 
-  expect(getVisibleTodoTitles()).toEqual(["筋トレ", "散歩", "買い物"]);
+  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
 });
 
 test("期限日が近い順で並び替えできる", () => {
