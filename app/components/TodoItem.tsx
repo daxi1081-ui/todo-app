@@ -185,7 +185,7 @@ export function TodoItem({
     setEditingPriority(priority);
     setEditingRepeat(repeat);
     setEditingTags(tags.join(", "));
-    setIsEditingDetailsOpen(false);
+    setIsEditingDetailsOpen(true);
     setIsEditing(true);
   }
 

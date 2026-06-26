@@ -1090,19 +1090,19 @@ test("Todo を編集できる", () => {
   expect(screen.queryByText("筋トレ")).toBeNull();
 });
 
-test("Todo編集時にも詳細項目を開閉して保存できる", () => {
+test("編集ボタンを押すと詳細項目が表示された状態になる", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
 
-  const openButton = screen.getByRole("button", { name: "筋トレの編集詳細を表示" });
-
-  expect(openButton.getAttribute("aria-expanded")).toBe("false");
-  fireEvent.click(openButton);
-
   const closeButton = screen.getByRole("button", { name: "筋トレの編集詳細を隠す" });
 
   expect(closeButton.getAttribute("aria-expanded")).toBe("true");
+  expect(screen.getByLabelText("Todo メモを編集")).toBeDefined();
+  expect(screen.getByLabelText("Todo 期限日を編集")).toBeDefined();
+  expect(screen.getByLabelText("Todo 優先度を編集")).toBeDefined();
+  expect(screen.getByLabelText("Todo タグを編集")).toBeDefined();
+  expect(screen.getByLabelText("筋トレの繰り返し設定を変更")).toBeDefined();
   fireEvent.change(screen.getByLabelText("Todo メモを編集"), {
     target: { value: "フォーム詳細から更新" },
   });
@@ -1123,7 +1123,7 @@ test("メモを編集できる", () => {
   expect(screen.getByText("腕立てを20回")).toBeDefined();
 });
 
-test("期限日を編集できる", () => {
+test("編集時に詳細表示ボタンを押さずに期限日を変更できる", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
@@ -1147,7 +1147,7 @@ test("期限日を削除できる", () => {
   expect(screen.queryByText(formatDueDate(today))).toBeNull();
 });
 
-test("優先度を編集できる", () => {
+test("編集時に詳細表示ボタンを押さずに優先度を変更できる", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
@@ -1159,7 +1159,7 @@ test("優先度を編集できる", () => {
   expect(screen.getAllByText("優先度: 高").length).toBeGreaterThan(0);
 });
 
-test("Todo編集時に繰り返し設定を変更できる", () => {
+test("編集時に詳細表示ボタンを押さずに繰り返し設定を変更できる", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
@@ -1171,7 +1171,7 @@ test("Todo編集時に繰り返し設定を変更できる", () => {
   expect(screen.getByText("毎日", { selector: "span" })).toBeDefined();
 });
 
-test("タグを編集できる", () => {
+test("編集時に詳細表示ボタンを押さずにタグを変更できる", () => {
   render(<TodoList todos={todos} />);
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
