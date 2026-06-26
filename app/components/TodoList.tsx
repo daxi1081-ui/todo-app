@@ -362,6 +362,7 @@ export function TodoList({ todos }: TodoListProps) {
   const [newTodoPriority, setNewTodoPriority] = useState<TodoPriority>("none");
   const [newTodoRepeat, setNewTodoRepeat] = useState<TodoRepeat>("none");
   const [newTodoTags, setNewTodoTags] = useState("");
+  const [isNewTodoDetailsOpen, setIsNewTodoDetailsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<TodoFilter>("all");
   const [selectedSort, setSelectedSort] = useState<TodoSort>("created");
@@ -530,6 +531,7 @@ export function TodoList({ todos }: TodoListProps) {
     setNewTodoPriority("none");
     setNewTodoRepeat("none");
     setNewTodoTags("");
+    setIsNewTodoDetailsOpen(false);
   }
 
   /**
@@ -758,84 +760,98 @@ export function TodoList({ todos }: TodoListProps) {
         ))}
       </div>
 
-      <form onSubmit={addTodo} className="mt-6 grid gap-3">
+      <form onSubmit={addTodo} className="mt-6 rounded-lg bg-white p-4 shadow-sm">
         <label htmlFor="new-todo-title" className="sr-only">
           追加する Todo
         </label>
-        <input
-          id="new-todo-title"
-          type="text"
-          value={newTodoTitle}
-          onChange={(event) => setNewTodoTitle(event.target.value)}
-          onKeyDown={handleNewTodoKeyDown}
-          placeholder="新しい Todo"
-          className="min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400"
-        />
-        <label htmlFor="new-todo-memo" className="sr-only">
-          追加する Todo メモ
-        </label>
-        <textarea
-          id="new-todo-memo"
-          value={newTodoMemo}
-          onChange={(event) => setNewTodoMemo(event.target.value)}
-          placeholder="メモ"
-          rows={3}
-          className="min-w-0 resize-y rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400"
-        />
-        <label htmlFor="new-todo-due-date" className="sr-only">
-          追加する Todo 期限日
-        </label>
-        <input
-          id="new-todo-due-date"
-          type="date"
-          value={newTodoDueDate}
-          onChange={(event) => setNewTodoDueDate(event.target.value)}
-          className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition focus:border-blue-400"
-        />
-        <label htmlFor="new-todo-priority" className="sr-only">
-          追加する Todo 優先度
-        </label>
-        <select
-          id="new-todo-priority"
-          value={newTodoPriority}
-          onChange={(event) => setNewTodoPriority(event.target.value as TodoPriority)}
-          className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition focus:border-blue-400"
-        >
-          {priorityOptions.map((priority) => (
-            <option key={priority.value} value={priority.value}>
-              優先度: {priority.label}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="new-todo-repeat" className="sr-only">
-          Todoの繰り返し設定
-        </label>
-        <select
-          id="new-todo-repeat"
-          aria-label="Todoの繰り返し設定"
-          value={newTodoRepeat}
-          onChange={(event) => setNewTodoRepeat(event.target.value as TodoRepeat)}
-          className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition focus:border-blue-400"
-        >
-          {repeatOptions.map((repeat) => (
-            <option key={repeat.value} value={repeat.value}>
-              繰り返し: {repeat.label}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="new-todo-tags" className="sr-only">
-          追加する Todo タグ
-        </label>
-        <input
-          id="new-todo-tags"
-          type="text"
-          value={newTodoTags}
-          onChange={(event) => setNewTodoTags(event.target.value)}
-          placeholder="タグ（カンマ区切り）"
-          className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400"
-        />
-        <div className="flex justify-end">
-          <AddButton disabled={newTodoTitle.trim().length === 0} />
+        <div className="grid gap-3">
+          <input
+            id="new-todo-title"
+            type="text"
+            value={newTodoTitle}
+            onChange={(event) => setNewTodoTitle(event.target.value)}
+            onKeyDown={handleNewTodoKeyDown}
+            placeholder="新しい Todo"
+            className="min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <button
+              type="button"
+              aria-expanded={isNewTodoDetailsOpen}
+              aria-controls="new-todo-details"
+              aria-label={isNewTodoDetailsOpen ? "Todo追加の詳細を隠す" : "Todo追加の詳細を表示"}
+              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+              onClick={() => setIsNewTodoDetailsOpen((isOpen) => !isOpen)}
+            >
+              {isNewTodoDetailsOpen ? "詳細を隠す" : "詳細を表示"}
+            </button>
+            <AddButton disabled={newTodoTitle.trim().length === 0} />
+          </div>
+          <div id="new-todo-details" className="grid gap-3 pt-1" hidden={!isNewTodoDetailsOpen}>
+            <label htmlFor="new-todo-memo" className="sr-only">
+              追加する Todo メモ
+            </label>
+            <textarea
+              id="new-todo-memo"
+              value={newTodoMemo}
+              onChange={(event) => setNewTodoMemo(event.target.value)}
+              placeholder="メモ"
+              rows={3}
+              className="min-w-0 resize-y rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+            />
+            <label htmlFor="new-todo-due-date" className="sr-only">
+              追加する Todo 期限日
+            </label>
+            <input
+              id="new-todo-due-date"
+              type="date"
+              value={newTodoDueDate}
+              onChange={(event) => setNewTodoDueDate(event.target.value)}
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400"
+            />
+            <label htmlFor="new-todo-priority" className="sr-only">
+              追加する Todo 優先度
+            </label>
+            <select
+              id="new-todo-priority"
+              value={newTodoPriority}
+              onChange={(event) => setNewTodoPriority(event.target.value as TodoPriority)}
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400"
+            >
+              {priorityOptions.map((priority) => (
+                <option key={priority.value} value={priority.value}>
+                  優先度: {priority.label}
+                </option>
+              ))}
+            </select>
+            <label htmlFor="new-todo-repeat" className="sr-only">
+              Todoの繰り返し設定
+            </label>
+            <select
+              id="new-todo-repeat"
+              aria-label="Todoの繰り返し設定"
+              value={newTodoRepeat}
+              onChange={(event) => setNewTodoRepeat(event.target.value as TodoRepeat)}
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400"
+            >
+              {repeatOptions.map((repeat) => (
+                <option key={repeat.value} value={repeat.value}>
+                  繰り返し: {repeat.label}
+                </option>
+              ))}
+            </select>
+            <label htmlFor="new-todo-tags" className="sr-only">
+              追加する Todo タグ
+            </label>
+            <input
+              id="new-todo-tags"
+              type="text"
+              value={newTodoTags}
+              onChange={(event) => setNewTodoTags(event.target.value)}
+              placeholder="タグ（カンマ区切り）"
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+            />
+          </div>
         </div>
       </form>
     </>

@@ -300,6 +300,51 @@ test("Todo を追加できる", () => {
   expect(tagsInput.value).toBe("");
 });
 
+test("Todo追加フォームの詳細項目を開閉できる", () => {
+  render(<TodoList todos={todos} />);
+
+  const openButton = screen.getByRole("button", { name: "Todo追加の詳細を表示" });
+
+  expect(openButton.getAttribute("aria-expanded")).toBe("false");
+  fireEvent.click(openButton);
+
+  const closeButton = screen.getByRole("button", { name: "Todo追加の詳細を隠す" });
+
+  expect(closeButton.getAttribute("aria-expanded")).toBe("true");
+  fireEvent.click(closeButton);
+
+  expect(screen.getByRole("button", { name: "Todo追加の詳細を表示" }).getAttribute("aria-expanded")).toBe(
+    "false",
+  );
+});
+
+test("詳細項目を閉じた状態でTodoを追加できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "水を飲む" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
+
+  expect(screen.getByText("水を飲む")).toBeDefined();
+});
+
+test("詳細項目を開いた状態でTodoを追加できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Todo追加の詳細を表示" }));
+  fireEvent.change(screen.getByLabelText("追加する Todo"), {
+    target: { value: "読書" },
+  });
+  fireEvent.change(screen.getByLabelText("追加する Todo メモ"), {
+    target: { value: "寝る前に読む" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Todoを追加" }));
+
+  expect(screen.getByText("読書")).toBeDefined();
+  expect(screen.getByText("寝る前に読む")).toBeDefined();
+});
+
 test("メモ付き Todo を追加できる", () => {
   render(<TodoList todos={todos} />);
 
@@ -963,6 +1008,27 @@ test("Todo を編集できる", () => {
 
   expect(screen.getByText("朝の筋トレ")).toBeDefined();
   expect(screen.queryByText("筋トレ")).toBeNull();
+});
+
+test("Todo編集時にも詳細項目を開閉して保存できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+
+  const openButton = screen.getByRole("button", { name: "筋トレの編集詳細を表示" });
+
+  expect(openButton.getAttribute("aria-expanded")).toBe("false");
+  fireEvent.click(openButton);
+
+  const closeButton = screen.getByRole("button", { name: "筋トレの編集詳細を隠す" });
+
+  expect(closeButton.getAttribute("aria-expanded")).toBe("true");
+  fireEvent.change(screen.getByLabelText("Todo メモを編集"), {
+    target: { value: "フォーム詳細から更新" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Todoを保存" }));
+
+  expect(screen.getByText("フォーム詳細から更新")).toBeDefined();
 });
 
 test("メモを編集できる", () => {

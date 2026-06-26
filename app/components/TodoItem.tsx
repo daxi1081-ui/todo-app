@@ -148,6 +148,7 @@ export function TodoItem({
   const editTagsInputId = useId();
   const editInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingDetailsOpen, setIsEditingDetailsOpen] = useState(false);
   const [editingTitle, setEditingTitle] = useState(title);
   const [editingMemo, setEditingMemo] = useState(memo);
   const [editingDueDate, setEditingDueDate] = useState(dueDate);
@@ -184,6 +185,7 @@ export function TodoItem({
     setEditingPriority(priority);
     setEditingRepeat(repeat);
     setEditingTags(tags.join(", "));
+    setIsEditingDetailsOpen(false);
     setIsEditing(true);
   }
 
@@ -197,6 +199,7 @@ export function TodoItem({
     setEditingPriority(priority);
     setEditingRepeat(repeat);
     setEditingTags(tags.join(", "));
+    setIsEditingDetailsOpen(false);
     setIsEditing(false);
   }
 
@@ -220,6 +223,7 @@ export function TodoItem({
       editingRepeat,
       parseTags(editingTags),
     );
+    setIsEditingDetailsOpen(false);
     setIsEditing(false);
   }
 
@@ -325,67 +329,83 @@ export function TodoItem({
             onKeyDown={handleEditKeyDown}
             className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
           />
-          <label htmlFor={editMemoInputId} className="sr-only">
-            Todo メモを編集
-          </label>
-          <textarea
-            id={editMemoInputId}
-            value={editingMemo}
-            onChange={(event) => setEditingMemo(event.target.value)}
-            rows={3}
-            className="min-w-0 resize-y rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
-          />
-          <label htmlFor={editDueDateInputId} className="sr-only">
-            Todo 期限日を編集
-          </label>
-          <input
-            id={editDueDateInputId}
-            type="date"
-            value={editingDueDate}
-            onChange={(event) => setEditingDueDate(event.target.value)}
-            className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
-          />
-          <label htmlFor={editPriorityInputId} className="sr-only">
-            Todo 優先度を編集
-          </label>
-          <select
-            id={editPriorityInputId}
-            value={editingPriority}
-            onChange={(event) => setEditingPriority(event.target.value as TodoPriority)}
-            className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+          <button
+            type="button"
+            aria-expanded={isEditingDetailsOpen}
+            aria-controls={`edit-todo-details-${editTitleInputId}`}
+            aria-label={isEditingDetailsOpen ? `${title}の編集詳細を隠す` : `${title}の編集詳細を表示`}
+            className="w-fit rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+            onClick={() => setIsEditingDetailsOpen((isOpen) => !isOpen)}
           >
-            {priorityOptions.map((priorityOption) => (
-              <option key={priorityOption.value} value={priorityOption.value}>
-                優先度: {priorityOption.label}
-              </option>
-            ))}
-          </select>
-          <label htmlFor={editRepeatInputId} className="sr-only">
-            Todo 繰り返し設定を編集
-          </label>
-          <select
-            id={editRepeatInputId}
-            aria-label={`${title}の繰り返し設定を変更`}
-            value={editingRepeat}
-            onChange={(event) => setEditingRepeat(event.target.value as TodoRepeat)}
-            className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+            {isEditingDetailsOpen ? "詳細を隠す" : "詳細を表示"}
+          </button>
+          <div
+            id={`edit-todo-details-${editTitleInputId}`}
+            className="grid gap-2"
+            hidden={!isEditingDetailsOpen}
           >
-            {repeatOptions.map((repeatOption) => (
-              <option key={repeatOption.value} value={repeatOption.value}>
-                繰り返し: {repeatOption.label}
-              </option>
-            ))}
-          </select>
-          <label htmlFor={editTagsInputId} className="sr-only">
-            Todo タグを編集
-          </label>
-          <input
-            id={editTagsInputId}
-            type="text"
-            value={editingTags}
-            onChange={(event) => setEditingTags(event.target.value)}
-            className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
-          />
+            <label htmlFor={editMemoInputId} className="sr-only">
+              Todo メモを編集
+            </label>
+            <textarea
+              id={editMemoInputId}
+              value={editingMemo}
+              onChange={(event) => setEditingMemo(event.target.value)}
+              rows={3}
+              className="min-w-0 resize-y rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+            />
+            <label htmlFor={editDueDateInputId} className="sr-only">
+              Todo 期限日を編集
+            </label>
+            <input
+              id={editDueDateInputId}
+              type="date"
+              value={editingDueDate}
+              onChange={(event) => setEditingDueDate(event.target.value)}
+              className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+            />
+            <label htmlFor={editPriorityInputId} className="sr-only">
+              Todo 優先度を編集
+            </label>
+            <select
+              id={editPriorityInputId}
+              value={editingPriority}
+              onChange={(event) => setEditingPriority(event.target.value as TodoPriority)}
+              className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+            >
+              {priorityOptions.map((priorityOption) => (
+                <option key={priorityOption.value} value={priorityOption.value}>
+                  優先度: {priorityOption.label}
+                </option>
+              ))}
+            </select>
+            <label htmlFor={editRepeatInputId} className="sr-only">
+              Todo 繰り返し設定を編集
+            </label>
+            <select
+              id={editRepeatInputId}
+              aria-label={`${title}の繰り返し設定を変更`}
+              value={editingRepeat}
+              onChange={(event) => setEditingRepeat(event.target.value as TodoRepeat)}
+              className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+            >
+              {repeatOptions.map((repeatOption) => (
+                <option key={repeatOption.value} value={repeatOption.value}>
+                  繰り返し: {repeatOption.label}
+                </option>
+              ))}
+            </select>
+            <label htmlFor={editTagsInputId} className="sr-only">
+              Todo タグを編集
+            </label>
+            <input
+              id={editTagsInputId}
+              type="text"
+              value={editingTags}
+              onChange={(event) => setEditingTags(event.target.value)}
+              className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+            />
+          </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
