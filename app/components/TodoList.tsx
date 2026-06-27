@@ -6,6 +6,7 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { AddButton } from "./AddButton";
 import { TodoItem } from "./TodoItem";
 import { normalizeTag, parseTags } from "../utils/tags";
+import { createTodoSections, toDateInputValue } from "../utils/todoSections";
 import type {
   Todo,
   TodoFilter,
@@ -98,14 +99,6 @@ function isTodoSort(value: unknown): value is TodoSort {
  * @param date 変換する日付。
  * @returns YYYY-MM-DD 形式の日付文字列。
  */
-function toDateInputValue(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
 /**
  * 保存済み Todo を現在の Todo 型に整えます。
  *
@@ -375,6 +368,7 @@ export function TodoList({ todos }: TodoListProps) {
     searchTodos(filterTodos(todoItems, selectedFilter), searchQuery),
     selectedSort,
   );
+  const todoSections = createTodoSections(filteredTodoItems);
   const selectedSortLabel = sortOptions.find((sort) => sort.value === selectedSort)?.label ?? "";
   const hasSearchQuery = searchQuery.trim().length > 0;
 
@@ -767,31 +761,80 @@ export function TodoList({ todos }: TodoListProps) {
       </div>
       </div>
 
-      <div className="rounded-lg bg-white shadow-sm">
-        {filteredTodoItems.map((todo) => (
-          <TodoItem
-            key={todo.id}
-            title={todo.title}
-            memo={todo.memo}
-            dueDate={todo.dueDate}
-            priority={todo.priority}
-            repeat={todo.repeat}
-            tags={todo.tags}
-            subtasks={todo.subtasks}
-            priorityOptions={priorityOptions}
-            repeatOptions={repeatOptions}
-            completed={todo.completed}
-            onToggle={() => toggleTodoCompleted(todo.id)}
-            onDelete={() => deleteTodo(todo.id)}
-            onUpdateTodo={(title, memo, dueDate, priority, repeat, tags) =>
-              updateTodo(todo.id, title, memo, dueDate, priority, repeat, tags)
-            }
-            onAddSubtask={(title) => addSubtask(todo.id, title)}
-            onToggleSubtask={(subtaskId) => toggleSubtaskCompleted(todo.id, subtaskId)}
-            onUpdateSubtask={(subtaskId, title) => updateSubtask(todo.id, subtaskId, title)}
-            onDeleteSubtask={(subtaskId) => deleteSubtask(todo.id, subtaskId)}
-          />
-        ))}
+      <div className="grid gap-5">
+        {todoSections.map((section) => {
+          const headingId = `todo-section-${section.id}`;
+          const isOverdueSection = section.id === "overdue";
+          const isCompletedSection = section.id === "completed";
+
+          return (
+            <section
+              key={section.id}
+              aria-labelledby={headingId}
+              className={isCompletedSection ? "opacity-80" : undefined}
+            >
+              <div className="mb-2 flex items-baseline justify-between px-2">
+                <h2
+                  id={headingId}
+                  className={
+                    isOverdueSection
+                      ? "text-sm font-bold tracking-normal text-red-700"
+                      : isCompletedSection
+                        ? "text-sm font-bold tracking-normal text-gray-500"
+                        : "text-sm font-bold tracking-normal text-gray-700"
+                  }
+                >
+                  {section.label}
+                </h2>
+                <span
+                  className={
+                    isOverdueSection
+                      ? "text-xs font-semibold text-red-500"
+                      : "text-xs font-semibold text-gray-400"
+                  }
+                  aria-label={`${section.label} ${section.todos.length}件`}
+                >
+                  {section.todos.length}件
+                </span>
+              </div>
+
+              <div
+                className={
+                  isOverdueSection
+                    ? "overflow-hidden rounded-lg border border-red-100 bg-white shadow-sm ring-1 ring-red-50"
+                    : isCompletedSection
+                      ? "overflow-hidden rounded-lg bg-white shadow-sm"
+                      : "overflow-hidden rounded-lg bg-white shadow-sm"
+                }
+              >
+                {section.todos.map((todo) => (
+                  <TodoItem
+                    key={todo.id}
+                    title={todo.title}
+                    memo={todo.memo}
+                    dueDate={todo.dueDate}
+                    priority={todo.priority}
+                    repeat={todo.repeat}
+                    tags={todo.tags}
+                    subtasks={todo.subtasks}
+                    priorityOptions={priorityOptions}
+                    repeatOptions={repeatOptions}
+                    completed={todo.completed}
+                    onToggle={() => toggleTodoCompleted(todo.id)}
+                    onDelete={() => deleteTodo(todo.id)}
+                    onUpdateTodo={(title, memo, dueDate, priority, repeat, tags) =>
+                      updateTodo(todo.id, title, memo, dueDate, priority, repeat, tags)
+                    }
+                    onAddSubtask={(title) => addSubtask(todo.id, title)}
+                    onToggleSubtask={(subtaskId) => toggleSubtaskCompleted(todo.id, subtaskId)}
+                    onUpdateSubtask={(subtaskId, title) => updateSubtask(todo.id, subtaskId, title)}
+                    onDeleteSubtask={(subtaskId) => deleteSubtask(todo.id, subtaskId)}
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
 
       <form onSubmit={addTodo} className="mt-6 rounded-lg bg-white p-4 shadow-sm">

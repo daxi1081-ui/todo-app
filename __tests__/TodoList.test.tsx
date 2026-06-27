@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test } from "vitest";
 
 import { TodoList } from "../app/components/TodoList";
@@ -72,6 +72,14 @@ function getVisibleTodoTitles() {
     .map((button) => button.getAttribute("aria-label")?.replace("を削除する", ""));
 }
 
+function getTodoSection(label: string) {
+  return screen.getByRole("region", { name: new RegExp(label) });
+}
+
+function expectTodoInSection(title: string, sectionLabel: string) {
+  expect(within(getTodoSection(sectionLabel)).getByText(title)).toBeDefined();
+}
+
 beforeEach(() => {
   localStorage.clear();
 });
@@ -79,6 +87,153 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   localStorage.clear();
+});
+
+function createSectionTodos(): Todo[] {
+  return [
+    {
+      id: 101,
+      title: "期限切れタスク",
+      memo: "",
+      dueDate: yesterday,
+      priority: "none",
+      repeat: "none",
+      tags: [],
+      subtasks: [],
+      completed: false,
+    },
+    {
+      id: 102,
+      title: "今日タスク",
+      memo: "",
+      dueDate: today,
+      priority: "none",
+      repeat: "none",
+      tags: [],
+      subtasks: [],
+      completed: false,
+    },
+    {
+      id: 103,
+      title: "明日以降タスク",
+      memo: "",
+      dueDate: tomorrow,
+      priority: "none",
+      repeat: "none",
+      tags: [],
+      subtasks: [],
+      completed: false,
+    },
+    {
+      id: 104,
+      title: "期限なしタスク",
+      memo: "",
+      dueDate: "",
+      priority: "none",
+      repeat: "none",
+      tags: [],
+      subtasks: [],
+      completed: false,
+    },
+    {
+      id: 105,
+      title: "完了済みタスク",
+      memo: "",
+      dueDate: today,
+      priority: "none",
+      repeat: "none",
+      tags: [],
+      subtasks: [],
+      completed: true,
+    },
+  ];
+}
+
+test("期限切れTodoが期限切れセクションに表示される", () => {
+  render(<TodoList todos={createSectionTodos()} />);
+
+  expectTodoInSection("期限切れタスク", "期限切れ");
+});
+
+test("今日期限のTodoが今日セクションに表示される", () => {
+  render(<TodoList todos={createSectionTodos()} />);
+
+  expectTodoInSection("今日タスク", "今日");
+});
+
+test("明日以降のTodoが明日以降セクションに表示される", () => {
+  render(<TodoList todos={createSectionTodos()} />);
+
+  expectTodoInSection("明日以降タスク", "明日以降");
+});
+
+test("期限なしTodoが期限なしセクションに表示される", () => {
+  render(<TodoList todos={createSectionTodos()} />);
+
+  expectTodoInSection("期限なしタスク", "期限なし");
+});
+
+test("完了済みTodoが完了済みセクションに表示される", () => {
+  render(<TodoList todos={createSectionTodos()} />);
+
+  expectTodoInSection("完了済みタスク", "完了済み");
+});
+
+test("各セクションの件数が正しく表示される", () => {
+  render(
+    <TodoList
+      todos={[
+        ...createSectionTodos(),
+        {
+          id: 106,
+          title: "期限なしタスク2",
+          memo: "",
+          dueDate: "",
+          priority: "none",
+          repeat: "none",
+          tags: [],
+          subtasks: [],
+          completed: false,
+        },
+      ]}
+    />,
+  );
+
+  expect(screen.getByLabelText("期限切れ 1件")).toBeDefined();
+  expect(screen.getByLabelText("今日 1件")).toBeDefined();
+  expect(screen.getByLabelText("明日以降 1件")).toBeDefined();
+  expect(screen.getByLabelText("期限なし 2件")).toBeDefined();
+  expect(screen.getByLabelText("完了済み 1件")).toBeDefined();
+});
+
+test("検索中も表示対象だけでセクション分けされる", () => {
+  render(<TodoList todos={createSectionTodos()} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "絞り込み・並び替えメニューを開く" }));
+
+  const searchInput = screen.getByRole("searchbox");
+
+  fireEvent.change(searchInput, {
+    target: { value: "タスク" },
+  });
+
+  expect(screen.getByLabelText("期限切れ 1件")).toBeDefined();
+  expect(screen.getByLabelText("今日 1件")).toBeDefined();
+  expect(screen.getByLabelText("明日以降 1件")).toBeDefined();
+  expect(screen.getByLabelText("期限なし 1件")).toBeDefined();
+  expect(screen.getByLabelText("完了済み 1件")).toBeDefined();
+
+  fireEvent.change(searchInput, {
+    target: { value: "今日" },
+  });
+
+  expectTodoInSection("今日タスク", "今日");
+  expect(screen.getByLabelText("期限切れ 0件")).toBeDefined();
+  expect(screen.getByLabelText("今日 1件")).toBeDefined();
+  expect(screen.getByLabelText("明日以降 0件")).toBeDefined();
+  expect(screen.getByLabelText("期限なし 0件")).toBeDefined();
+  expect(screen.getByLabelText("完了済み 0件")).toBeDefined();
+  expect(screen.queryByText("期限切れタスク")).toBeNull();
 });
 
 test("localStorage が空の場合、初期 Todo が表示される", () => {
@@ -208,7 +363,7 @@ test("すべてに戻すと全件表示される", () => {
 test("初期表示で優先度が高いTodoから表示される", () => {
   render(<TodoList todos={todos} />);
 
-  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+  expect(getVisibleTodoTitles()).toEqual(["筋トレ", "散歩", "買い物"]);
 });
 
 test("優先度が同じ場合は作成順で表示される", () => {
@@ -220,7 +375,7 @@ test("優先度が同じ場合は作成順で表示される", () => {
 
   render(<TodoList todos={samePriorityTodos} />);
 
-  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+  expect(getVisibleTodoTitles()).toEqual(["筋トレ", "散歩", "買い物"]);
 });
 
 test("デフォルト順で並び替えできる", () => {
@@ -233,7 +388,7 @@ test("デフォルト順で並び替えできる", () => {
     target: { value: "created" },
   });
 
-  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+  expect(getVisibleTodoTitles()).toEqual(["筋トレ", "散歩", "買い物"]);
 });
 
 test("期限日が近い順で並び替えできる", () => {
@@ -253,7 +408,7 @@ test("優先度が高い順で並び替えできる", () => {
     target: { value: "priority" },
   });
 
-  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+  expect(getVisibleTodoTitles()).toEqual(["筋トレ", "散歩", "買い物"]);
 });
 
 test("メニューを開くと検索欄が表示される", () => {
@@ -300,7 +455,7 @@ test("メニュー内の表示順序変更で並び替えが動作する", () =>
     target: { value: "priority" },
   });
 
-  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+  expect(getVisibleTodoTitles()).toEqual(["筋トレ", "散歩", "買い物"]);
   expect(screen.getByText("優先度が高い順", { selector: "span" })).toBeDefined();
 });
 
@@ -326,7 +481,7 @@ test("localStorage から並び替え状態が復元される", async () => {
       "priority",
     );
   });
-  expect(getVisibleTodoTitles()).toEqual(["散歩", "買い物", "筋トレ"]);
+  expect(getVisibleTodoTitles()).toEqual(["筋トレ", "散歩", "買い物"]);
 });
 
 test("選択中のフィルタは aria-pressed で分かる", () => {
