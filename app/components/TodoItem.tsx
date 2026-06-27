@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import type { FormEvent, KeyboardEvent, MouseEvent } from "react";
 
 import { parseTags } from "../utils/tags";
 import type {
@@ -45,6 +45,7 @@ type TodoItemProps = {
     priority: TodoPriority,
     repeat: TodoRepeat,
     tags: string[],
+    subtasks: TodoSubtask[],
   ) => void;
   /** サブタスクを追加する処理。 */
   onAddSubtask: (title: string) => void;
@@ -148,13 +149,14 @@ export function TodoItem({
   const editTagsInputId = useId();
   const editInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isEditingDetailsOpen, setIsEditingDetailsOpen] = useState(false);
   const [editingTitle, setEditingTitle] = useState(title);
   const [editingMemo, setEditingMemo] = useState(memo);
   const [editingDueDate, setEditingDueDate] = useState(dueDate);
   const [editingPriority, setEditingPriority] = useState<TodoPriority>(priority);
   const [editingRepeat, setEditingRepeat] = useState<TodoRepeat>(repeat);
   const [editingTags, setEditingTags] = useState(tags.join(", "));
+  const [editingSubtasks, setEditingSubtasks] = useState<TodoSubtask[]>(subtasks);
+  const [newEditingSubtaskTitle, setNewEditingSubtaskTitle] = useState("");
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [editingSubtaskId, setEditingSubtaskId] = useState<number | null>(null);
   const [editingSubtaskTitle, setEditingSubtaskTitle] = useState("");
@@ -185,7 +187,8 @@ export function TodoItem({
     setEditingPriority(priority);
     setEditingRepeat(repeat);
     setEditingTags(tags.join(", "));
-    setIsEditingDetailsOpen(true);
+    setEditingSubtasks(subtasks.map((subtask) => ({ ...subtask })));
+    setNewEditingSubtaskTitle("");
     setIsEditing(true);
   }
 
@@ -199,7 +202,8 @@ export function TodoItem({
     setEditingPriority(priority);
     setEditingRepeat(repeat);
     setEditingTags(tags.join(", "));
-    setIsEditingDetailsOpen(false);
+    setEditingSubtasks(subtasks.map((subtask) => ({ ...subtask })));
+    setNewEditingSubtaskTitle("");
     setIsEditing(false);
   }
 
@@ -222,8 +226,8 @@ export function TodoItem({
       editingPriority,
       editingRepeat,
       parseTags(editingTags),
+      editingSubtasks,
     );
-    setIsEditingDetailsOpen(false);
     setIsEditing(false);
   }
 
@@ -232,7 +236,7 @@ export function TodoItem({
    *
    * @param event キーボード入力イベント。
    */
-  function handleEditKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+  function handleEditTitleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") {
       event.preventDefault();
       event.currentTarget.form?.requestSubmit();
@@ -243,6 +247,109 @@ export function TodoItem({
       event.preventDefault();
       cancelEditing();
     }
+  }
+
+  /**
+   * 編集モーダル全体で Esc キー入力を受け取り、編集内容を破棄して閉じます。
+   *
+   * @param event キーボード入力イベント。
+   */
+  function handleEditModalKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "Escape") {
+      return;
+    }
+
+    event.preventDefault();
+    cancelEditing();
+  }
+
+  /**
+   * 背景クリック時だけ編集モーダルを閉じます。
+   *
+   * @param event マウス入力イベント。
+   */
+  function handleEditBackdropMouseDown(event: MouseEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    cancelEditing();
+  }
+
+  /**
+   * モーダル内のサブタスク一覧で使う一意な ID を作成します。
+   *
+   * @returns 新しいサブタスク ID。
+   */
+  function createEditingSubtaskId() {
+    if (editingSubtasks.length === 0) {
+      return 1;
+    }
+
+    return Math.max(...editingSubtasks.map((subtask) => subtask.id)) + 1;
+  }
+
+  /**
+   * 編集中のドラフトへサブタスクを追加します。
+   *
+   * @param event フォーム送信イベント。
+   */
+  function addEditingSubtask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedTitle = newEditingSubtaskTitle.trim();
+
+    if (trimmedTitle.length === 0) {
+      return;
+    }
+
+    setEditingSubtasks((currentSubtasks) => [
+      ...currentSubtasks,
+      {
+        id: createEditingSubtaskId(),
+        title: trimmedTitle,
+        completed: false,
+      },
+    ]);
+    setNewEditingSubtaskTitle("");
+  }
+
+  /**
+   * 編集中のドラフト内でサブタスクの完了状態を切り替えます。
+   *
+   * @param subtaskId 対象サブタスクの ID。
+   */
+  function toggleEditingSubtaskCompleted(subtaskId: number) {
+    setEditingSubtasks((currentSubtasks) =>
+      currentSubtasks.map((subtask) =>
+        subtask.id === subtaskId ? { ...subtask, completed: !subtask.completed } : subtask,
+      ),
+    );
+  }
+
+  /**
+   * 編集中のドラフト内でサブタスクのタイトルを更新します。
+   *
+   * @param subtaskId 対象サブタスクの ID。
+   * @param value 更新後のタイトル。
+   */
+  function updateEditingSubtaskTitle(subtaskId: number, value: string) {
+    setEditingSubtasks((currentSubtasks) =>
+      currentSubtasks.map((subtask) =>
+        subtask.id === subtaskId ? { ...subtask, title: value } : subtask,
+      ),
+    );
+  }
+
+  /**
+   * 編集中のドラフトからサブタスクを削除します。
+   *
+   * @param subtaskId 削除するサブタスクの ID。
+   */
+  function deleteEditingSubtask(subtaskId: number) {
+    setEditingSubtasks((currentSubtasks) =>
+      currentSubtasks.filter((subtask) => subtask.id !== subtaskId),
+    );
   }
 
   /**
@@ -315,118 +422,7 @@ export function TodoItem({
         {completed ? "✓" : ""}
       </button>
 
-      {isEditing ? (
-        <form className="grid min-w-0 flex-1 gap-2" onSubmit={saveEditing}>
-          <label htmlFor={editTitleInputId} className="sr-only">
-            Todo タイトルを編集
-          </label>
-          <input
-            ref={editInputRef}
-            id={editTitleInputId}
-            type="text"
-            value={editingTitle}
-            onChange={(event) => setEditingTitle(event.target.value)}
-            onKeyDown={handleEditKeyDown}
-            className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
-          />
-          <button
-            type="button"
-            aria-expanded={isEditingDetailsOpen}
-            aria-controls={`edit-todo-details-${editTitleInputId}`}
-            aria-label={isEditingDetailsOpen ? `${title}の編集詳細を隠す` : `${title}の編集詳細を表示`}
-            className="w-fit rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
-            onClick={() => setIsEditingDetailsOpen((isOpen) => !isOpen)}
-          >
-            {isEditingDetailsOpen ? "詳細を隠す" : "詳細を表示"}
-          </button>
-          <div
-            id={`edit-todo-details-${editTitleInputId}`}
-            className="grid gap-2"
-            hidden={!isEditingDetailsOpen}
-          >
-            <label htmlFor={editMemoInputId} className="sr-only">
-              Todo メモを編集
-            </label>
-            <textarea
-              id={editMemoInputId}
-              value={editingMemo}
-              onChange={(event) => setEditingMemo(event.target.value)}
-              rows={3}
-              className="min-w-0 resize-y rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
-            />
-            <label htmlFor={editDueDateInputId} className="sr-only">
-              Todo 期限日を編集
-            </label>
-            <input
-              id={editDueDateInputId}
-              type="date"
-              value={editingDueDate}
-              onChange={(event) => setEditingDueDate(event.target.value)}
-              className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
-            />
-            <label htmlFor={editPriorityInputId} className="sr-only">
-              Todo 優先度を編集
-            </label>
-            <select
-              id={editPriorityInputId}
-              value={editingPriority}
-              onChange={(event) => setEditingPriority(event.target.value as TodoPriority)}
-              className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
-            >
-              {priorityOptions.map((priorityOption) => (
-                <option key={priorityOption.value} value={priorityOption.value}>
-                  優先度: {priorityOption.label}
-                </option>
-              ))}
-            </select>
-            <label htmlFor={editRepeatInputId} className="sr-only">
-              Todo 繰り返し設定を編集
-            </label>
-            <select
-              id={editRepeatInputId}
-              aria-label={`${title}の繰り返し設定を変更`}
-              value={editingRepeat}
-              onChange={(event) => setEditingRepeat(event.target.value as TodoRepeat)}
-              className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
-            >
-              {repeatOptions.map((repeatOption) => (
-                <option key={repeatOption.value} value={repeatOption.value}>
-                  繰り返し: {repeatOption.label}
-                </option>
-              ))}
-            </select>
-            <label htmlFor={editTagsInputId} className="sr-only">
-              Todo タグを編集
-            </label>
-            <input
-              id={editTagsInputId}
-              type="text"
-              value={editingTags}
-              onChange={(event) => setEditingTags(event.target.value)}
-              className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="submit"
-              aria-label="Todoを保存"
-              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
-              disabled={trimmedEditingTitle.length === 0}
-            >
-              保存
-            </button>
-            <button
-              type="button"
-              className="rounded-md px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
-              onClick={cancelEditing}
-            >
-              キャンセル
-            </button>
-          </div>
-        </form>
-      ) : (
-        <>
-          <button type="button" className="grid min-w-0 flex-1 gap-2 text-left" onClick={onToggle}>
+      <button type="button" className="grid min-w-0 flex-1 gap-2 text-left" onClick={onToggle}>
             <span
               className={
                 completed
@@ -531,18 +527,17 @@ export function TodoItem({
                 </span>
               ) : null}
             </span>
-          </button>
+      </button>
 
-          <button
-            type="button"
-            className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
-            aria-label={`${title}を編集する`}
-            onClick={startEditing}
-          >
-            編集
-          </button>
-        </>
-      )}
+      <button
+        type="button"
+        className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+        aria-label={`${title}を編集する`}
+        aria-haspopup="dialog"
+        onClick={startEditing}
+      >
+        編集
+      </button>
 
       <button
         type="button"
@@ -554,8 +549,7 @@ export function TodoItem({
       </button>
       </div>
 
-      {!isEditing ? (
-        <div className="ml-10 mt-3 grid gap-2">
+      <div className="ml-10 mt-3 grid gap-2">
           {subtasks.map((subtask) =>
             editingSubtaskId === subtask.id ? (
               <form
@@ -650,6 +644,225 @@ export function TodoItem({
               追加
             </button>
           </form>
+      </div>
+
+      {isEditing ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-gray-950/40 px-4 py-6"
+          data-testid="todo-edit-modal-backdrop"
+          onMouseDown={handleEditBackdropMouseDown}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`todo-edit-dialog-title-${editTitleInputId}`}
+            className="max-h-full w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-5 shadow-xl"
+            onKeyDown={handleEditModalKeyDown}
+          >
+            <form className="grid gap-4" onSubmit={saveEditing}>
+              <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
+                <h2
+                  id={`todo-edit-dialog-title-${editTitleInputId}`}
+                  className="text-lg font-bold tracking-normal text-gray-950"
+                >
+                  Todo 詳細
+                </h2>
+                <button
+                  type="button"
+                  aria-expanded="true"
+                  aria-controls={`edit-todo-details-${editTitleInputId}`}
+                  aria-label={`${title}の編集詳細を隠す`}
+                  className="sr-only"
+                >
+                  詳細を隠す
+                </button>
+                <button
+                  type="button"
+                  aria-label={`${title}の詳細編集モーダルを閉じる`}
+                  className="rounded-md px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                  onClick={cancelEditing}
+                >
+                  閉じる
+                </button>
+              </div>
+
+              <div id={`edit-todo-details-${editTitleInputId}`} className="grid gap-3">
+                <label htmlFor={editTitleInputId} className="text-sm font-semibold text-gray-700">
+                  Todo タイトルを編集
+                </label>
+                <input
+                  ref={editInputRef}
+                  id={editTitleInputId}
+                  type="text"
+                  value={editingTitle}
+                  onChange={(event) => setEditingTitle(event.target.value)}
+                  onKeyDown={handleEditTitleKeyDown}
+                  className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                />
+              </div>
+
+              <div className="grid gap-3">
+                <label htmlFor={editMemoInputId} className="text-sm font-semibold text-gray-700">
+                  Todo メモを編集
+                </label>
+                <textarea
+                  id={editMemoInputId}
+                  value={editingMemo}
+                  onChange={(event) => setEditingMemo(event.target.value)}
+                  rows={4}
+                  className="min-w-0 resize-y rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3">
+                  <label htmlFor={editDueDateInputId} className="text-sm font-semibold text-gray-700">
+                    Todo 期限日を編集
+                  </label>
+                  <input
+                    id={editDueDateInputId}
+                    type="date"
+                    value={editingDueDate}
+                    onChange={(event) => setEditingDueDate(event.target.value)}
+                    className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <label htmlFor={editPriorityInputId} className="text-sm font-semibold text-gray-700">
+                    Todo 優先度を編集
+                  </label>
+                  <select
+                    id={editPriorityInputId}
+                    value={editingPriority}
+                    onChange={(event) => setEditingPriority(event.target.value as TodoPriority)}
+                    className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                  >
+                    {priorityOptions.map((priorityOption) => (
+                      <option key={priorityOption.value} value={priorityOption.value}>
+                        {priorityOption.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3">
+                  <label htmlFor={editRepeatInputId} className="text-sm font-semibold text-gray-700">
+                    Todo 繰り返し設定を編集
+                  </label>
+                  <select
+                    id={editRepeatInputId}
+                    aria-label={`${title}の繰り返し設定を変更`}
+                    value={editingRepeat}
+                    onChange={(event) => setEditingRepeat(event.target.value as TodoRepeat)}
+                    className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                  >
+                    {repeatOptions.map((repeatOption) => (
+                      <option key={repeatOption.value} value={repeatOption.value}>
+                        {repeatOption.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid gap-3">
+                  <label htmlFor={editTagsInputId} className="text-sm font-semibold text-gray-700">
+                    Todo タグを編集
+                  </label>
+                  <input
+                    id={editTagsInputId}
+                    type="text"
+                    value={editingTags}
+                    onChange={(event) => setEditingTags(event.target.value)}
+                    className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                  />
+                </div>
+              </div>
+
+              <section aria-labelledby={`todo-edit-subtasks-${editTitleInputId}`} className="grid gap-3">
+                <h3
+                  id={`todo-edit-subtasks-${editTitleInputId}`}
+                  className="text-sm font-bold tracking-normal text-gray-700"
+                >
+                  サブタスク
+                </h3>
+                <div className="grid gap-2">
+                  {editingSubtasks.map((subtask) => (
+                    <div key={subtask.id} className="grid gap-2 rounded-md border border-gray-100 p-3 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+                      <button
+                        type="button"
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-bold text-blue-600 transition hover:border-blue-400"
+                        aria-label={subtask.completed ? "サブタスクを未完了に戻す" : "サブタスクを完了にする"}
+                        aria-pressed={subtask.completed}
+                        onClick={() => toggleEditingSubtaskCompleted(subtask.id)}
+                      >
+                        {subtask.completed ? "✓" : ""}
+                      </button>
+                      <label htmlFor={`edit-modal-subtask-${editTitleInputId}-${subtask.id}`} className="sr-only">
+                        サブタスクを編集
+                      </label>
+                      <input
+                        id={`edit-modal-subtask-${editTitleInputId}-${subtask.id}`}
+                        type="text"
+                        value={subtask.title}
+                        onChange={(event) => updateEditingSubtaskTitle(subtask.id, event.target.value)}
+                        className="min-w-0 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                      />
+                      <button
+                        type="button"
+                        className="rounded-md px-3 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600"
+                        aria-label={`${subtask.title}を削除する`}
+                        onClick={() => deleteEditingSubtask(subtask.id)}
+                      >
+                        削除
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+                <button
+                  type="submit"
+                  aria-label="Todoを保存"
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+                  disabled={trimmedEditingTitle.length === 0}
+                >
+                  保存
+                </button>
+                <button
+                  type="button"
+                  aria-label="キャンセル"
+                  className="rounded-md px-4 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                  onClick={cancelEditing}
+                >
+                  キャンセル
+                </button>
+              </div>
+            </form>
+
+            <form className="mt-3 flex min-w-0 gap-2" onSubmit={addEditingSubtask}>
+              <label htmlFor={`edit-modal-new-subtask-${editTitleInputId}`} className="sr-only">
+                {title} のサブタスクを追加
+              </label>
+              <input
+                id={`edit-modal-new-subtask-${editTitleInputId}`}
+                type="text"
+                value={newEditingSubtaskTitle}
+                onChange={(event) => setNewEditingSubtaskTitle(event.target.value)}
+                placeholder="サブタスク"
+                className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+              />
+              <button
+                type="submit"
+                aria-label={`${title}のサブタスクを追加`}
+                className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                disabled={newEditingSubtaskTitle.trim().length === 0}
+              >
+                追加
+              </button>
+            </form>
+          </div>
         </div>
       ) : null}
     </div>

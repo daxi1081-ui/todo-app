@@ -429,7 +429,7 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
-   * 指定した Todo のタイトル、メモ、期限日、優先度、繰り返し設定、タグを更新します。
+   * 指定した Todo のタイトル、メモ、期限日、優先度、繰り返し設定、タグ、サブタスクを更新します。
    *
    * @param id 更新する Todo の ID。
    * @param title 更新後のタイトル。
@@ -438,6 +438,7 @@ export function TodoList({ todos }: TodoListProps) {
    * @param priority 更新後の優先度。
    * @param repeat 更新後の繰り返し設定。
    * @param tags 更新後のタグ一覧。
+   * @param subtasks 更新後のサブタスク一覧。
    */
   function updateTodo(
     id: number,
@@ -447,6 +448,7 @@ export function TodoList({ todos }: TodoListProps) {
     priority: TodoPriority,
     repeat: TodoRepeat,
     tags: string[],
+    subtasks: TodoSubtask[],
   ) {
     const trimmedTitle = title.trim();
 
@@ -459,7 +461,7 @@ export function TodoList({ todos }: TodoListProps) {
     setTodoItems((currentTodos) =>
       currentTodos.map((todo) =>
         todo.id === id
-          ? { ...todo, title: trimmedTitle, memo, dueDate, priority, repeat, tags }
+          ? { ...todo, title: trimmedTitle, memo, dueDate, priority, repeat, tags, subtasks }
           : todo,
       ),
     );
@@ -822,8 +824,8 @@ export function TodoList({ todos }: TodoListProps) {
                     completed={todo.completed}
                     onToggle={() => toggleTodoCompleted(todo.id)}
                     onDelete={() => deleteTodo(todo.id)}
-                    onUpdateTodo={(title, memo, dueDate, priority, repeat, tags) =>
-                      updateTodo(todo.id, title, memo, dueDate, priority, repeat, tags)
+                    onUpdateTodo={(title, memo, dueDate, priority, repeat, tags, subtasks) =>
+                      updateTodo(todo.id, title, memo, dueDate, priority, repeat, tags, subtasks)
                     }
                     onAddSubtask={(title) => addSubtask(todo.id, title)}
                     onToggleSubtask={(subtaskId) => toggleSubtaskCompleted(todo.id, subtaskId)}

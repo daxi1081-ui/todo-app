@@ -1266,6 +1266,65 @@ test("編集ボタンを押すと詳細項目が表示された状態になる",
   expect(screen.getByText("フォーム詳細から更新")).toBeDefined();
 });
 
+test("編集ボタンを押すと詳細編集モーダルが開く", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+
+  const dialog = screen.getByRole("dialog", { name: "Todo 詳細" });
+
+  expect(dialog.getAttribute("aria-modal")).toBe("true");
+  expect(within(dialog).getByLabelText("Todo タイトルを編集")).toBeDefined();
+});
+
+test("モーダル編集中の内容は保存するまで一覧に反映されない", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("Todo タイトルを編集"), {
+    target: { value: "保存前の筋トレ" },
+  });
+
+  expect(screen.getByText("筋トレ")).toBeDefined();
+  expect(screen.queryByText("保存前の筋トレ")).toBeNull();
+
+  fireEvent.click(screen.getByRole("button", { name: "Todoを保存" }));
+
+  expect(screen.getByText("保存前の筋トレ")).toBeDefined();
+  expect(screen.queryByText("筋トレ")).toBeNull();
+});
+
+test("モーダル外クリックで編集を閉じられる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  fireEvent.change(screen.getByLabelText("Todo タイトルを編集"), {
+    target: { value: "外側クリックで破棄" },
+  });
+  fireEvent.mouseDown(screen.getByTestId("todo-edit-modal-backdrop"));
+
+  expect(screen.queryByRole("dialog", { name: "Todo 詳細" })).toBeNull();
+  expect(screen.getByText("筋トレ")).toBeDefined();
+  expect(screen.queryByText("外側クリックで破棄")).toBeNull();
+});
+
+test("モーダル内でサブタスクを編集して保存できる", () => {
+  render(<TodoList todos={todos} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+
+  const dialog = screen.getByRole("dialog", { name: "Todo 詳細" });
+
+  fireEvent.change(within(dialog).getByLabelText("筋トレ のサブタスクを追加"), {
+    target: { value: "腹筋をする" },
+  });
+  fireEvent.click(within(dialog).getByRole("button", { name: "筋トレのサブタスクを追加" }));
+  fireEvent.click(screen.getByRole("button", { name: "Todoを保存" }));
+
+  expect(screen.getByText("腹筋をする")).toBeDefined();
+  expect(screen.getByText("サブタスク: 0/1")).toBeDefined();
+});
+
 test("メモを編集できる", () => {
   render(<TodoList todos={todos} />);
 
