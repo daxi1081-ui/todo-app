@@ -1271,7 +1271,7 @@ test("編集ボタンを押すと詳細編集モーダルが開く", () => {
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
 
-  const dialog = screen.getByRole("dialog", { name: "Todo 詳細" });
+  const dialog = screen.getByRole("dialog", { name: "詳細" });
 
   expect(dialog.getAttribute("aria-modal")).toBe("true");
   expect(within(dialog).getByLabelText("Todo タイトルを編集")).toBeDefined();
@@ -1303,7 +1303,7 @@ test("モーダル外クリックで編集を閉じられる", () => {
   });
   fireEvent.mouseDown(screen.getByTestId("todo-edit-modal-backdrop"));
 
-  expect(screen.queryByRole("dialog", { name: "Todo 詳細" })).toBeNull();
+  expect(screen.queryByRole("dialog", { name: "詳細" })).toBeNull();
   expect(screen.getByText("筋トレ")).toBeDefined();
   expect(screen.queryByText("外側クリックで破棄")).toBeNull();
 });
@@ -1313,7 +1313,7 @@ test("モーダル内でサブタスクを編集して保存できる", () => {
 
   fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
 
-  const dialog = screen.getByRole("dialog", { name: "Todo 詳細" });
+  const dialog = screen.getByRole("dialog", { name: "詳細" });
 
   fireEvent.change(within(dialog).getByLabelText("筋トレ のサブタスクを追加"), {
     target: { value: "腹筋をする" },
