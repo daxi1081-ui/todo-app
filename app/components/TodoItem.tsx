@@ -418,14 +418,14 @@ export function TodoItem({
   }
 
   return (
-    <div className="border-b border-gray-100 px-4 py-5 transition hover:bg-gray-50/70 last:border-b-0">
+    <div className="border-b border-gray-100 px-4 py-5 transition hover:bg-gray-50/70 last:border-b-0 dark:border-gray-800 dark:hover:bg-gray-800/60">
       <div className="flex items-start gap-4">
       <button
         type="button"
         className={
           completed
-            ? "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500 bg-blue-500 text-sm font-bold text-white transition hover:bg-blue-600"
-            : "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-sm font-bold text-blue-600 transition hover:border-blue-400 hover:bg-blue-50"
+            ? "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500 bg-blue-500 text-sm font-bold text-white transition hover:bg-blue-600 dark:border-blue-400 dark:bg-blue-500 dark:hover:bg-blue-400"
+            : "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-sm font-bold text-blue-600 transition hover:border-blue-400 hover:bg-blue-50 dark:border-gray-600 dark:text-blue-300 dark:hover:border-blue-400 dark:hover:bg-blue-950"
         }
         aria-label={completed ? "未完了に戻す" : "完了にする"}
         aria-pressed={completed}
@@ -438,8 +438,8 @@ export function TodoItem({
             <span
               className={
                 completed
-                  ? "block truncate text-base font-semibold leading-6 text-gray-400 line-through"
-                  : "block truncate text-base font-semibold leading-6 text-gray-950"
+                  ? "block truncate text-base font-semibold leading-6 text-gray-400 line-through dark:text-gray-500"
+                  : "block truncate text-base font-semibold leading-6 text-gray-950 dark:text-gray-50"
               }
             >
               {title}
@@ -448,8 +448,8 @@ export function TodoItem({
               <span
                 className={
                   completed
-                    ? "block max-h-10 overflow-hidden whitespace-pre-wrap break-words text-sm leading-5 text-gray-400"
-                    : "block max-h-10 overflow-hidden whitespace-pre-wrap break-words text-sm leading-5 text-gray-500"
+                    ? "block max-h-10 overflow-hidden whitespace-pre-wrap break-words text-sm leading-5 text-gray-400 dark:text-gray-500"
+                    : "block max-h-10 overflow-hidden whitespace-pre-wrap break-words text-sm leading-5 text-gray-500 dark:text-gray-300"
                 }
               >
                 {memo}
@@ -460,20 +460,20 @@ export function TodoItem({
                 <span
                   className={
                     completed
-                      ? "inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400"
+                      ? "inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400 dark:bg-gray-800 dark:text-gray-500"
                       : isOverdue
-                        ? "inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-red-100"
-                        : "inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100"
+                        ? "inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-red-100 dark:bg-red-950/60 dark:text-red-200 dark:ring-red-800"
+                        : "inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100 dark:bg-blue-950/60 dark:text-blue-200 dark:ring-blue-800"
                   }
                 >
                   <span aria-hidden="true">📅</span>
                   <span
                     className={
                       completed
-                        ? "text-gray-400"
+                        ? "text-gray-400 dark:text-gray-500"
                         : isOverdue
-                          ? "text-red-700"
-                          : "text-blue-700"
+                          ? "text-red-700 dark:text-red-200"
+                          : "text-blue-700 dark:text-blue-200"
                     }
                   >
                     {formatDueDate(dueDate)}
@@ -485,16 +485,16 @@ export function TodoItem({
                 <span
                   className={
                     completed
-                      ? "inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400"
-                      : "inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-100"
+                      ? "inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400 dark:bg-gray-800 dark:text-gray-500"
+                      : "inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-100 dark:bg-amber-950/60 dark:text-amber-200 dark:ring-amber-800"
                   }
                 >
                   <span
                     aria-hidden="true"
                     className={
                       completed
-                        ? "h-1.5 w-1.5 rounded-full bg-gray-300"
-                        : "h-1.5 w-1.5 rounded-full bg-amber-500"
+                        ? "h-1.5 w-1.5 rounded-full bg-gray-300 dark:bg-gray-600"
+                        : "h-1.5 w-1.5 rounded-full bg-amber-500 dark:bg-amber-300"
                     }
                   />
                   優先度: {priorityLabel}
@@ -504,8 +504,8 @@ export function TodoItem({
                 <span
                   className={
                     completed
-                      ? "inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400"
-                      : "inline-flex rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-violet-100"
+                      ? "inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400 dark:bg-gray-800 dark:text-gray-500"
+                      : "inline-flex rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-violet-100 dark:bg-violet-950/60 dark:text-violet-200 dark:ring-violet-800"
                   }
                 >
                   {repeatLabel}
@@ -519,8 +519,8 @@ export function TodoItem({
                     key={tag}
                     className={
                       completed
-                        ? "inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400"
-                        : "inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100"
+                        ? "inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-400 dark:bg-gray-800 dark:text-gray-500"
+                        : "inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-200 dark:ring-emerald-800"
                     }
                   >
                     {tag}
@@ -528,10 +528,10 @@ export function TodoItem({
                 ))}
               </span>
             ) : null}
-            <span className="mt-1 grid gap-1 text-xs font-semibold text-gray-500">
+            <span className="mt-1 grid gap-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
               <span>サブタスク: {completedSubtaskCount}/{subtasks.length}</span>
               {subtasks.length > 0 ? (
-                <span className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                <span className="h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                   <span
                     className="block h-full rounded-full bg-blue-500"
                     style={{ width: `${subtaskProgressPercent}%` }}
@@ -543,7 +543,7 @@ export function TodoItem({
 
       <button
         type="button"
-        className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+        className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950"
         aria-label={`${title}を編集する`}
         aria-haspopup="dialog"
         onClick={startEditing}
@@ -553,7 +553,7 @@ export function TodoItem({
 
       <button
         type="button"
-        className="rounded-md px-3 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600"
+        className="rounded-md px-3 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600 dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200"
         aria-label={`${title}を削除する`}
         onClick={onDelete}
       >
@@ -577,19 +577,19 @@ export function TodoItem({
                   type="text"
                   value={editingSubtaskTitle}
                   onChange={(event) => setEditingSubtaskTitle(event.target.value)}
-                  className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                  className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
                 />
                 <button
                   type="submit"
                   aria-label="サブタスクを保存"
-                  className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                  className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:text-gray-600"
                   disabled={editingSubtaskTitle.trim().length === 0}
                 >
                   保存
                 </button>
                 <button
                   type="button"
-                  className="rounded-md px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+                  className="rounded-md px-3 py-2 text-sm font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                   onClick={cancelSubtaskEditing}
                 >
                   キャンセル
@@ -599,7 +599,7 @@ export function TodoItem({
               <div key={subtask.id} className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-bold text-blue-600 transition hover:border-blue-400"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-bold text-blue-600 transition hover:border-blue-400 dark:border-gray-600 dark:text-blue-300 dark:hover:border-blue-400"
                   aria-label={subtask.completed ? "サブタスクを未完了に戻す" : "サブタスクを完了にする"}
                   aria-pressed={subtask.completed}
                   onClick={() => onToggleSubtask(subtask.id)}
@@ -609,15 +609,15 @@ export function TodoItem({
                 <span
                   className={
                     subtask.completed
-                      ? "min-w-0 flex-1 truncate text-sm text-gray-400 line-through"
-                      : "min-w-0 flex-1 truncate text-sm text-gray-700"
+                      ? "min-w-0 flex-1 truncate text-sm text-gray-400 line-through dark:text-gray-500"
+                      : "min-w-0 flex-1 truncate text-sm text-gray-700 dark:text-gray-200"
                   }
                 >
                   {subtask.title}
                 </span>
                 <button
                   type="button"
-                  className="rounded-md px-2 py-1 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+                  className="rounded-md px-2 py-1 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950"
                   aria-label={`${subtask.title}を編集する`}
                   onClick={() => startSubtaskEditing(subtask)}
                 >
@@ -625,7 +625,7 @@ export function TodoItem({
                 </button>
                 <button
                   type="button"
-                  className="rounded-md px-2 py-1 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600"
+                  className="rounded-md px-2 py-1 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600 dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200"
                   aria-label={`${subtask.title}を削除する`}
                   onClick={() => onDeleteSubtask(subtask.id)}
                 >
@@ -645,12 +645,12 @@ export function TodoItem({
               value={newSubtaskTitle}
               onChange={(event) => setNewSubtaskTitle(event.target.value)}
               placeholder="サブタスク"
-              className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+              className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
             />
             <button
               type="submit"
               aria-label={`${title}のサブタスクを追加`}
-              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:text-gray-600"
               disabled={newSubtaskTitle.trim().length === 0}
             >
               追加
@@ -660,7 +660,7 @@ export function TodoItem({
 
       {isEditing ? (
         <div
-          className="fixed inset-0 z-50 grid place-items-end bg-gray-950/35 px-0 py-0 sm:place-items-center sm:px-4 sm:py-6"
+          className="fixed inset-0 z-50 grid place-items-end bg-gray-950/35 px-0 py-0 sm:place-items-center sm:px-4 sm:py-6 dark:bg-black/60"
           data-testid="todo-edit-modal-backdrop"
           onMouseDown={handleEditBackdropMouseDown}
         >
@@ -668,22 +668,22 @@ export function TodoItem({
             role="dialog"
             aria-modal="true"
             aria-labelledby={`todo-edit-dialog-title-${editTitleInputId}`}
-            className="flex h-[100dvh] w-full max-w-2xl flex-col overflow-hidden bg-gray-100 shadow-xl sm:h-auto sm:max-h-[calc(100dvh-3rem)] sm:rounded-lg"
+            className="flex h-[100dvh] w-full max-w-2xl flex-col overflow-hidden bg-gray-100 shadow-xl sm:h-auto sm:max-h-[calc(100dvh-3rem)] sm:rounded-lg dark:bg-gray-950"
             onKeyDown={handleEditModalKeyDown}
           >
             <form className="flex min-h-0 flex-1 flex-col" onSubmit={saveEditing}>
-              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-6">
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 dark:border-gray-800 dark:bg-gray-900">
                 <button
                   type="button"
                   aria-label={`${title}の詳細編集モーダルを閉じる`}
-                  className="rounded-md px-2 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+                  className="rounded-md px-2 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950"
                   onClick={cancelEditing}
                 >
                   閉じる
                 </button>
                 <h2
                   id={`todo-edit-dialog-title-${editTitleInputId}`}
-                  className="min-w-0 flex-1 text-center text-base font-bold tracking-normal text-gray-950"
+                  className="min-w-0 flex-1 text-center text-base font-bold tracking-normal text-gray-950 dark:text-gray-50"
                 >
                   詳細
                 </h2>
@@ -713,18 +713,18 @@ export function TodoItem({
                       onChange={(event) => setEditingTitle(event.target.value)}
                       onKeyDown={handleEditTitleKeyDown}
                       placeholder="タイトル"
-                      className="min-w-0 rounded-lg border border-gray-200 bg-white px-4 py-4 text-xl font-semibold text-gray-950 shadow-sm outline-none transition placeholder:text-gray-300 focus:border-blue-400 sm:text-2xl"
+                      className="min-w-0 rounded-lg border border-gray-200 bg-white px-4 py-4 text-xl font-semibold text-gray-950 shadow-sm outline-none transition placeholder:text-gray-300 focus:border-blue-400 sm:text-2xl dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:placeholder:text-gray-600 dark:focus:border-blue-500"
                     />
                   </div>
 
                   <section aria-labelledby={`todo-edit-note-${editMemoInputId}`} className="grid gap-2">
                     <h3
                       id={`todo-edit-note-${editMemoInputId}`}
-                      className="px-1 text-xs font-bold uppercase text-gray-500"
+                      className="px-1 text-xs font-bold uppercase text-gray-500 dark:text-gray-400"
                     >
                       メモ
                     </h3>
-                    <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div className="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
                       <label htmlFor={editMemoInputId} className="sr-only">
                         Todo メモを編集
                       </label>
@@ -734,7 +734,7 @@ export function TodoItem({
                         onChange={(event) => setEditingMemo(event.target.value)}
                         placeholder="メモを追加"
                         rows={5}
-                        className="min-w-0 w-full resize-y rounded-lg border-0 bg-transparent px-4 py-3 text-sm leading-6 text-gray-900 outline-none placeholder:text-gray-400"
+                        className="min-w-0 w-full resize-y rounded-lg border-0 bg-transparent px-4 py-3 text-sm leading-6 text-gray-900 outline-none placeholder:text-gray-400 dark:text-gray-100 dark:placeholder:text-gray-500"
                       />
                     </div>
                   </section>
@@ -742,13 +742,13 @@ export function TodoItem({
                   <section aria-labelledby={`todo-edit-settings-${editDueDateInputId}`} className="grid gap-2">
                     <h3
                       id={`todo-edit-settings-${editDueDateInputId}`}
-                      className="px-1 text-xs font-bold uppercase text-gray-500"
+                      className="px-1 text-xs font-bold uppercase text-gray-500 dark:text-gray-400"
                     >
                       詳細
                     </h3>
-                    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                      <div className="grid gap-3 border-b border-gray-100 px-4 py-3 sm:grid-cols-[8rem_1fr] sm:items-center">
-                        <label htmlFor={editDueDateInputId} className="text-sm font-semibold text-gray-700">
+                    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                      <div className="grid gap-3 border-b border-gray-100 px-4 py-3 sm:grid-cols-[8rem_1fr] sm:items-center dark:border-gray-800">
+                        <label htmlFor={editDueDateInputId} className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                           <span aria-hidden="true">期限</span>
                           <span className="sr-only">Todo 期限日を編集</span>
                         </label>
@@ -758,11 +758,11 @@ export function TodoItem({
                           type="date"
                           value={editingDueDate}
                           onChange={(event) => setEditingDueDate(event.target.value)}
-                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
                         />
                       </div>
-                      <div className="grid gap-3 border-b border-gray-100 px-4 py-3 sm:grid-cols-[8rem_1fr] sm:items-center">
-                        <label htmlFor={editPriorityInputId} className="text-sm font-semibold text-gray-700">
+                      <div className="grid gap-3 border-b border-gray-100 px-4 py-3 sm:grid-cols-[8rem_1fr] sm:items-center dark:border-gray-800">
+                        <label htmlFor={editPriorityInputId} className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                           <span aria-hidden="true">優先度</span>
                           <span className="sr-only">Todo 優先度を編集</span>
                         </label>
@@ -771,7 +771,7 @@ export function TodoItem({
                           aria-label="Todo 優先度を編集"
                           value={editingPriority}
                           onChange={(event) => setEditingPriority(event.target.value as TodoPriority)}
-                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
                         >
                           {priorityOptions.map((priorityOption) => (
                             <option key={priorityOption.value} value={priorityOption.value}>
@@ -780,8 +780,8 @@ export function TodoItem({
                           ))}
                         </select>
                       </div>
-                      <div className="grid gap-3 border-b border-gray-100 px-4 py-3 sm:grid-cols-[8rem_1fr] sm:items-center">
-                        <label htmlFor={editRepeatInputId} className="text-sm font-semibold text-gray-700">
+                      <div className="grid gap-3 border-b border-gray-100 px-4 py-3 sm:grid-cols-[8rem_1fr] sm:items-center dark:border-gray-800">
+                        <label htmlFor={editRepeatInputId} className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                           <span aria-hidden="true">繰り返し</span>
                           <span className="sr-only">Todo 繰り返し設定を編集</span>
                         </label>
@@ -790,7 +790,7 @@ export function TodoItem({
                           aria-label={`${title}の繰り返し設定を変更`}
                           value={editingRepeat}
                           onChange={(event) => setEditingRepeat(event.target.value as TodoRepeat)}
-                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
                         >
                           {repeatOptions.map((repeatOption) => (
                             <option key={repeatOption.value} value={repeatOption.value}>
@@ -800,7 +800,7 @@ export function TodoItem({
                         </select>
                       </div>
                       <div className="grid gap-3 px-4 py-3 sm:grid-cols-[8rem_1fr] sm:items-center">
-                        <label htmlFor={editTagsInputId} className="text-sm font-semibold text-gray-700">
+                        <label htmlFor={editTagsInputId} className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                           <span aria-hidden="true">タグ</span>
                           <span className="sr-only">Todo タグを編集</span>
                         </label>
@@ -811,7 +811,7 @@ export function TodoItem({
                           value={editingTags}
                           onChange={(event) => setEditingTags(event.target.value)}
                           placeholder="タグをカンマ区切りで入力"
-                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
                         />
                       </div>
                     </div>
@@ -821,24 +821,24 @@ export function TodoItem({
                     <div className="flex items-end justify-between gap-3 px-1">
                       <h3
                         id={`todo-edit-subtasks-${editTitleInputId}`}
-                        className="text-xs font-bold uppercase text-gray-500"
+                        className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400"
                       >
                         サブタスク
                       </h3>
-                      <span className="text-xs font-semibold text-gray-400">
+                      <span className="text-xs font-semibold text-gray-400 dark:text-gray-500">
                         {editingSubtasks.length}件
                       </span>
                     </div>
-                    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
                       {editingSubtasks.length > 0 ? (
                         editingSubtasks.map((subtask) => (
-                          <div key={subtask.id} className="grid gap-3 border-b border-gray-100 px-4 py-3 last:border-b-0 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+                          <div key={subtask.id} className="grid gap-3 border-b border-gray-100 px-4 py-3 last:border-b-0 sm:grid-cols-[auto_1fr_auto] sm:items-center dark:border-gray-800">
                             <button
                               type="button"
                               className={
                                 subtask.completed
-                                  ? "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500 bg-blue-500 text-xs font-bold text-white transition hover:bg-blue-600"
-                                  : "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-bold text-blue-600 transition hover:border-blue-400 hover:bg-blue-50"
+                                  ? "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500 bg-blue-500 text-xs font-bold text-white transition hover:bg-blue-600 dark:border-blue-400 dark:bg-blue-500 dark:hover:bg-blue-400"
+                                  : "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-bold text-blue-600 transition hover:border-blue-400 hover:bg-blue-50 dark:border-gray-600 dark:text-blue-300 dark:hover:border-blue-400 dark:hover:bg-blue-950"
                               }
                               aria-label={subtask.completed ? "サブタスクを未完了に戻す" : "サブタスクを完了にする"}
                               aria-pressed={subtask.completed}
@@ -856,13 +856,13 @@ export function TodoItem({
                               onChange={(event) => updateEditingSubtaskTitle(subtask.id, event.target.value)}
                               className={
                                 subtask.completed
-                                  ? "min-w-0 rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm text-gray-400 line-through outline-none transition focus:border-blue-400"
-                                  : "min-w-0 rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400"
+                                  ? "min-w-0 rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm text-gray-400 line-through outline-none transition focus:border-blue-400 dark:bg-gray-950 dark:text-gray-500 dark:focus:border-blue-500"
+                                  : "min-w-0 rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-400 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
                               }
                             />
                             <button
                               type="button"
-                              className="rounded-md px-3 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600"
+                              className="rounded-md px-3 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-50 hover:text-red-600 dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200"
                               aria-label={`${subtask.title}を削除する`}
                               onClick={() => deleteEditingSubtask(subtask.id)}
                             >
@@ -871,11 +871,11 @@ export function TodoItem({
                           </div>
                         ))
                       ) : (
-                        <p className="px-4 py-4 text-sm text-gray-400">
+                        <p className="px-4 py-4 text-sm text-gray-400 dark:text-gray-500">
                           サブタスクはありません
                         </p>
                       )}
-                      <div className="grid gap-2 border-t border-gray-100 px-4 py-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                      <div className="grid gap-2 border-t border-gray-100 px-4 py-3 sm:grid-cols-[1fr_auto] sm:items-center dark:border-gray-800">
                         <label htmlFor={`edit-modal-new-subtask-${editTitleInputId}`} className="sr-only">
                           {title} のサブタスクを追加
                         </label>
@@ -886,12 +886,12 @@ export function TodoItem({
                           onChange={(event) => setNewEditingSubtaskTitle(event.target.value)}
                           onKeyDown={handleNewEditingSubtaskKeyDown}
                           placeholder="新しいサブタスク"
-                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
                         />
                         <button
                           type="button"
                           aria-label={`${title}のサブタスクを追加`}
-                          className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                          className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:text-gray-600"
                           disabled={newEditingSubtaskTitle.trim().length === 0}
                           onClick={addEditingSubtask}
                         >
@@ -903,11 +903,11 @@ export function TodoItem({
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:justify-end sm:px-6">
+              <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:justify-end sm:px-6 dark:border-gray-800 dark:bg-gray-900">
                 <button
                   type="button"
                   aria-label="キャンセル"
-                  className="rounded-md px-4 py-3 text-sm font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-gray-800 sm:py-2"
+                  className="rounded-md px-4 py-3 text-sm font-semibold text-gray-600 transition hover:bg-gray-100 hover:text-gray-800 sm:py-2 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100"
                   onClick={cancelEditing}
                 >
                   キャンセル
@@ -915,7 +915,7 @@ export function TodoItem({
                 <button
                   type="submit"
                   aria-label="Todoを保存"
-                  className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 sm:py-2"
+                  className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 sm:py-2 dark:bg-blue-500 dark:hover:bg-blue-400 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
                   disabled={trimmedEditingTitle.length === 0}
                 >
                   保存

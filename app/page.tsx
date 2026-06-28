@@ -48,9 +48,9 @@ const todos: Todo[] = [
  */
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-100 px-4 py-8">
+    <main className="min-h-screen bg-gray-100 px-4 py-8 transition-colors dark:bg-gray-950">
       <div className="mx-auto max-w-xl">
-        <h1 className="mb-6 text-3xl font-bold text-gray-900">Todo</h1>
+        <h1 className="mb-6 text-3xl font-bold text-gray-900 dark:text-gray-50">Todo</h1>
 
         <TodoList todos={todos} />
       </div>

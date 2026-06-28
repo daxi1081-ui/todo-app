@@ -20,6 +20,8 @@ import type {
   TodoSubtask,
 } from "../types/todo";
 
+type TodoTheme = "light" | "dark";
+
 type TodoListProps = {
   /** page.tsx から受け取る初期 Todo 一覧。 */
   todos: Todo[];
@@ -62,6 +64,7 @@ const priorityRank: Record<TodoPriority, number> = {
 
 const todoStorageKey = "todo-app.todos";
 const todoSortStorageKey = "todo-app.sort";
+const todoThemeStorageKey = "todo-app.theme";
 
 /**
  * 優先度として扱える値かどうかを判定します。
@@ -91,6 +94,16 @@ function isTodoRepeat(value: unknown): value is TodoRepeat {
  */
 function isTodoSort(value: unknown): value is TodoSort {
   return value === "created" || value === "dueDate" || value === "priority";
+}
+
+/**
+ * 保存済みテーマとして扱える値かどうかを判定します。
+ *
+ * @param value 判定する値。
+ * @returns テーマとして扱える場合は true。
+ */
+function isTodoTheme(value: unknown): value is TodoTheme {
+  return value === "light" || value === "dark";
 }
 
 /**
@@ -221,6 +234,22 @@ function loadSortFromStorage(fallbackSort: TodoSort) {
 }
 
 /**
+ * localStorage からテーマ設定を読み込みます。
+ *
+ * @param fallbackTheme 保存データが使えない場合の初期テーマ。
+ * @returns 復元したテーマ、または初期テーマ。
+ */
+function loadThemeFromStorage(fallbackTheme: TodoTheme) {
+  if (typeof window === "undefined") {
+    return fallbackTheme;
+  }
+
+  const storedTheme = window.localStorage.getItem(todoThemeStorageKey);
+
+  return isTodoTheme(storedTheme) ? storedTheme : fallbackTheme;
+}
+
+/**
  * Todo 一覧を localStorage に保存します。
  *
  * @param todos 保存する Todo 一覧。
@@ -244,6 +273,32 @@ function saveSortToStorage(sort: TodoSort) {
   }
 
   window.localStorage.setItem(todoSortStorageKey, sort);
+}
+
+/**
+ * テーマ設定を localStorage に保存します。
+ *
+ * @param theme 保存するテーマ。
+ */
+function saveThemeToStorage(theme: TodoTheme) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(todoThemeStorageKey, theme);
+}
+
+/**
+ * ページ全体にテーマ用の class を反映します。
+ *
+ * @param theme 反映するテーマ。
+ */
+function applyThemeToDocument(theme: TodoTheme) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  document.documentElement.classList.toggle("dark", theme === "dark");
 }
 
 /**
@@ -360,9 +415,11 @@ export function TodoList({ todos }: TodoListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<TodoFilter>("all");
   const [selectedSort, setSelectedSort] = useState<TodoSort>("created");
+  const [selectedTheme, setSelectedTheme] = useState<TodoTheme>("light");
   const [hasLoadedStoredTodos, setHasLoadedStoredTodos] = useState(false);
   const hasChangedTodosRef = useRef(false);
   const hasChangedSortRef = useRef(false);
+  const hasChangedThemeRef = useRef(false);
 
   const filteredTodoItems = sortTodos(
     searchTodos(filterTodos(todoItems, selectedFilter), searchQuery),
@@ -371,6 +428,7 @@ export function TodoList({ todos }: TodoListProps) {
   const todoSections = createTodoSections(filteredTodoItems);
   const selectedSortLabel = sortOptions.find((sort) => sort.value === selectedSort)?.label ?? "";
   const hasSearchQuery = searchQuery.trim().length > 0;
+  const isDarkTheme = selectedTheme === "dark";
 
   useEffect(() => {
     let isActive = true;
@@ -404,6 +462,25 @@ export function TodoList({ todos }: TodoListProps) {
     saveTodosToStorage(todoItems);
     saveSortToStorage(selectedSort);
   }, [hasLoadedStoredTodos, selectedSort, todoItems]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    queueMicrotask(() => {
+      if (!isActive || hasChangedThemeRef.current) {
+        return;
+      }
+
+      const storedTheme = loadThemeFromStorage("light");
+
+      setSelectedTheme(storedTheme);
+      applyThemeToDocument(storedTheme);
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   /**
    * 指定した Todo の完了状態を反転します。
@@ -679,8 +756,36 @@ export function TodoList({ todos }: TodoListProps) {
     );
   }
 
+  /**
+   * ライトモードとダークモードを切り替えます。
+   */
+  function toggleTheme() {
+    hasChangedThemeRef.current = true;
+    setSelectedTheme((currentTheme) => {
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+
+      applyThemeToDocument(nextTheme);
+      saveThemeToStorage(nextTheme);
+
+      return nextTheme;
+    });
+  }
+
   return (
     <>
+      <div className="mb-4 flex justify-end">
+        <button
+          type="button"
+          aria-label={isDarkTheme ? "ライトモードに切り替える" : "ダークモードに切り替える"}
+          aria-pressed={isDarkTheme}
+          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-blue-200 hover:text-gray-950 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-blue-500 dark:hover:text-white"
+          onClick={toggleTheme}
+        >
+          <span aria-hidden="true">{isDarkTheme ? "☀" : "☾"}</span>
+          {isDarkTheme ? "Light" : "Dark"}
+        </button>
+      </div>
+
       <div className="mb-4 flex flex-wrap gap-2" aria-label="Todo 表示フィルタ" role="group">
         {filterOptions.map((filter) => {
           const isSelected = selectedFilter === filter.value;
@@ -691,8 +796,8 @@ export function TodoList({ todos }: TodoListProps) {
               type="button"
               className={
                 isSelected
-                  ? "rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white"
-                  : "rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition hover:text-gray-900"
+                  ? "rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white dark:bg-gray-100 dark:text-gray-950"
+                  : "rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition hover:text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:hover:text-white"
               }
               aria-pressed={isSelected}
               onClick={() => setSelectedFilter(filter.value)}
@@ -712,18 +817,18 @@ export function TodoList({ todos }: TodoListProps) {
             aria-label={
               isControlMenuOpen ? "絞り込み・並び替えメニューを閉じる" : "絞り込み・並び替えメニューを開く"
             }
-            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:text-gray-900"
+            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:text-gray-900 dark:bg-gray-900 dark:text-gray-300 dark:hover:text-white"
             onClick={() => setIsControlMenuOpen((isOpen) => !isOpen)}
           >
             絞り込み・並び替え
           </button>
           {hasSearchQuery ? (
-            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-200">
               検索中
             </span>
           ) : null}
           {selectedSort !== "created" ? (
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
               {selectedSortLabel}
             </span>
           ) : null}
@@ -731,7 +836,7 @@ export function TodoList({ todos }: TodoListProps) {
 
         <div
           id="todo-control-menu"
-          className="grid gap-3 rounded-lg bg-white p-4 shadow-sm sm:grid-cols-[1fr_auto]"
+          className="grid gap-3 rounded-lg bg-white p-4 shadow-sm sm:grid-cols-[1fr_auto] dark:bg-gray-900"
           hidden={!isControlMenuOpen}
         >
         <label htmlFor="todo-search" className="sr-only">
@@ -743,7 +848,7 @@ export function TodoList({ todos }: TodoListProps) {
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
           placeholder="検索"
-          className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+          className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
         />
         <label htmlFor="todo-sort" className="sr-only">
           Todo 並び替え
@@ -752,7 +857,7 @@ export function TodoList({ todos }: TodoListProps) {
           id="todo-sort"
           value={selectedSort}
           onChange={(event) => changeSort(event.target.value as TodoSort)}
-          className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm outline-none transition focus:border-blue-400"
+          className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm outline-none transition focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
         >
           {sortOptions.map((sort) => (
             <option key={sort.value} value={sort.value}>
@@ -780,10 +885,10 @@ export function TodoList({ todos }: TodoListProps) {
                   id={headingId}
                   className={
                     isOverdueSection
-                      ? "text-sm font-bold tracking-normal text-red-700"
+                      ? "text-sm font-bold tracking-normal text-red-700 dark:text-red-300"
                       : isCompletedSection
-                        ? "text-sm font-bold tracking-normal text-gray-500"
-                        : "text-sm font-bold tracking-normal text-gray-700"
+                        ? "text-sm font-bold tracking-normal text-gray-500 dark:text-gray-400"
+                        : "text-sm font-bold tracking-normal text-gray-700 dark:text-gray-200"
                   }
                 >
                   {section.label}
@@ -791,8 +896,8 @@ export function TodoList({ todos }: TodoListProps) {
                 <span
                   className={
                     isOverdueSection
-                      ? "text-xs font-semibold text-red-500"
-                      : "text-xs font-semibold text-gray-400"
+                      ? "text-xs font-semibold text-red-500 dark:text-red-300"
+                      : "text-xs font-semibold text-gray-400 dark:text-gray-500"
                   }
                   aria-label={`${section.label} ${section.todos.length}件`}
                 >
@@ -803,10 +908,10 @@ export function TodoList({ todos }: TodoListProps) {
               <div
                 className={
                   isOverdueSection
-                    ? "overflow-hidden rounded-lg border border-red-100 bg-white shadow-sm ring-1 ring-red-50"
+                    ? "overflow-hidden rounded-lg border border-red-100 bg-white shadow-sm ring-1 ring-red-50 dark:border-red-900/70 dark:bg-gray-900 dark:ring-red-900/40"
                     : isCompletedSection
-                      ? "overflow-hidden rounded-lg bg-white shadow-sm"
-                      : "overflow-hidden rounded-lg bg-white shadow-sm"
+                      ? "overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-900"
+                      : "overflow-hidden rounded-lg bg-white shadow-sm dark:bg-gray-900"
                 }
               >
                 {section.todos.map((todo) => (
@@ -839,7 +944,7 @@ export function TodoList({ todos }: TodoListProps) {
         })}
       </div>
 
-      <form onSubmit={addTodo} className="mt-6 rounded-lg bg-white p-4 shadow-sm">
+      <form onSubmit={addTodo} className="mt-6 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
         <label htmlFor="new-todo-title" className="sr-only">
           追加する Todo
         </label>
@@ -851,7 +956,7 @@ export function TodoList({ todos }: TodoListProps) {
             onChange={(event) => setNewTodoTitle(event.target.value)}
             onKeyDown={handleNewTodoKeyDown}
             placeholder="新しい Todo"
-            className="min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+            className="min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
           />
           <div className="flex flex-wrap items-center justify-between gap-2">
             <button
@@ -859,7 +964,7 @@ export function TodoList({ todos }: TodoListProps) {
               aria-expanded={isNewTodoDetailsOpen}
               aria-controls="new-todo-details"
               aria-label={isNewTodoDetailsOpen ? "Todo追加の詳細を隠す" : "Todo追加の詳細を表示"}
-              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950"
               onClick={() => setIsNewTodoDetailsOpen((isOpen) => !isOpen)}
             >
               {isNewTodoDetailsOpen ? "詳細を隠す" : "詳細を表示"}
@@ -876,7 +981,7 @@ export function TodoList({ todos }: TodoListProps) {
               onChange={(event) => setNewTodoMemo(event.target.value)}
               placeholder="メモ"
               rows={3}
-              className="min-w-0 resize-y rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+              className="min-w-0 resize-y rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
             />
             <label htmlFor="new-todo-due-date" className="sr-only">
               追加する Todo 期限日
@@ -886,7 +991,7 @@ export function TodoList({ todos }: TodoListProps) {
               type="date"
               value={newTodoDueDate}
               onChange={(event) => setNewTodoDueDate(event.target.value)}
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400"
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
             />
             <label htmlFor="new-todo-priority" className="sr-only">
               追加する Todo 優先度
@@ -895,7 +1000,7 @@ export function TodoList({ todos }: TodoListProps) {
               id="new-todo-priority"
               value={newTodoPriority}
               onChange={(event) => setNewTodoPriority(event.target.value as TodoPriority)}
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400"
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
             >
               {priorityOptions.map((priority) => (
                 <option key={priority.value} value={priority.value}>
@@ -911,7 +1016,7 @@ export function TodoList({ todos }: TodoListProps) {
               aria-label="Todoの繰り返し設定"
               value={newTodoRepeat}
               onChange={(event) => setNewTodoRepeat(event.target.value as TodoRepeat)}
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400"
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
             >
               {repeatOptions.map((repeat) => (
                 <option key={repeat.value} value={repeat.value}>
@@ -928,7 +1033,7 @@ export function TodoList({ todos }: TodoListProps) {
               value={newTodoTags}
               onChange={(event) => setNewTodoTags(event.target.value)}
               placeholder="タグ（カンマ区切り）"
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400"
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
             />
           </div>
         </div>

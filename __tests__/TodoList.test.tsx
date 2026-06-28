@@ -65,6 +65,7 @@ const todos: Todo[] = [
 
 const todoStorageKey = "todo-app.todos";
 const todoSortStorageKey = "todo-app.sort";
+const todoThemeStorageKey = "todo-app.theme";
 
 function getVisibleTodoTitles() {
   return screen
@@ -82,11 +83,13 @@ function expectTodoInSection(title: string, sectionLabel: string) {
 
 beforeEach(() => {
   localStorage.clear();
+  document.documentElement.classList.remove("dark");
 });
 
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  document.documentElement.classList.remove("dark");
 });
 
 function createSectionTodos(): Todo[] {
@@ -1747,4 +1750,45 @@ test("編集後も削除が動作する", () => {
   expect(screen.queryByText("夕方の散歩")).toBeNull();
   expect(screen.getByText("筋トレ")).toBeDefined();
   expect(screen.getByText("買い物")).toBeDefined();
+});
+test("テーマ切り替えボタンが表示される", () => {
+  render(<TodoList todos={todos} />);
+
+  expect(screen.getByRole("button", { name: "ダークモードに切り替える" })).toBeDefined();
+});
+
+test("テーマ切り替えボタンでダークモードとライトモードを切り替えられる", async () => {
+  render(<TodoList todos={todos} />);
+
+  const darkModeButton = screen.getByRole("button", { name: "ダークモードに切り替える" });
+
+  fireEvent.click(darkModeButton);
+
+  expect(document.documentElement.classList.contains("dark")).toBe(true);
+  expect(screen.getByRole("button", { name: "ライトモードに切り替える" }).getAttribute("aria-pressed")).toBe(
+    "true",
+  );
+
+  await waitFor(() => {
+    expect(localStorage.getItem(todoThemeStorageKey)).toBe("dark");
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: "ライトモードに切り替える" }));
+
+  expect(document.documentElement.classList.contains("dark")).toBe(false);
+
+  await waitFor(() => {
+    expect(localStorage.getItem(todoThemeStorageKey)).toBe("light");
+  });
+});
+
+test("localStorage からテーマ状態が復元される", async () => {
+  localStorage.setItem(todoThemeStorageKey, "dark");
+
+  render(<TodoList todos={todos} />);
+
+  await waitFor(() => {
+    expect(document.documentElement.classList.contains("dark")).toBe(true);
+  });
+  expect(screen.getByRole("button", { name: "ライトモードに切り替える" })).toBeDefined();
 });
