@@ -6,7 +6,8 @@ import type { FormEvent, KeyboardEvent } from "react";
 import { AddButton } from "./AddButton";
 import { TodoItem } from "./TodoItem";
 import { parseTags } from "../utils/tags";
-import { createTodoSections, toDateInputValue } from "../utils/todoSections";
+import { filterTodos, searchTodos, sortTodos } from "../utils/todoQueries";
+import { createTodoSections } from "../utils/todoSections";
 import {
   applyThemeToDocument,
   loadSortFromStorage,
@@ -62,107 +63,6 @@ const sortOptions: TodoSortOption[] = [
   { label: "期限日が近い順", value: "dueDate" },
   { label: "優先度が高い順", value: "priority" },
 ];
-
-const priorityRank: Record<TodoPriority, number> = {
-  none: 0,
-  low: 1,
-  medium: 2,
-  high: 3,
-};
-
-/**
- * Todo 一覧を選択中のフィルタに合わせて絞り込みます。
- *
- * @param todos 絞り込み対象の Todo 一覧。
- * @param filter 選択中のフィルタ。
- * @returns 表示対象の Todo 一覧。
- */
-function filterTodos(todos: Todo[], filter: TodoFilter) {
-  if (filter === "active") {
-    return todos.filter((todo) => !todo.completed);
-  }
-
-  if (filter === "completed") {
-    return todos.filter((todo) => todo.completed);
-  }
-
-  if (filter === "today") {
-    const today = toDateInputValue(new Date());
-
-    return todos.filter((todo) => todo.dueDate === today || todo.repeat === "daily");
-  }
-
-  if (filter === "scheduled") {
-    return todos.filter((todo) => todo.dueDate.length > 0 && !todo.completed);
-  }
-
-  return todos;
-}
-
-/**
- * Todo 一覧を検索語で絞り込みます。
- *
- * @param todos 検索対象の Todo 一覧。
- * @param query 検索語。
- * @returns 検索語に一致する Todo 一覧。
- */
-function searchTodos(todos: Todo[], query: string) {
-  const normalizedQuery = query.trim().toLowerCase();
-
-  if (normalizedQuery.length === 0) {
-    return todos;
-  }
-
-  return todos.filter((todo) => {
-    const searchableText = [
-      todo.title,
-      todo.memo,
-      ...todo.tags,
-      ...todo.subtasks.map((subtask) => subtask.title),
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return searchableText.includes(normalizedQuery);
-  });
-}
-
-/**
- * Todo 一覧を選択中の条件に合わせて並び替えます。
- *
- * @param todos 並び替え対象の Todo 一覧。
- * @param sort 選択中の並び替え条件。
- * @returns 表示順に並び替えた Todo 一覧。
- */
-function sortTodos(todos: Todo[], sort: TodoSort) {
-  const sortedTodos = [...todos];
-  const compareByPriorityThenCreated = (a: Todo, b: Todo) =>
-    priorityRank[b.priority] - priorityRank[a.priority] || a.id - b.id;
-
-  if (sort === "dueDate") {
-    return sortedTodos.sort((a, b) => {
-      if (a.dueDate.length === 0 && b.dueDate.length === 0) {
-        return a.id - b.id;
-      }
-
-      if (a.dueDate.length === 0) {
-        return 1;
-      }
-
-      if (b.dueDate.length === 0) {
-        return -1;
-      }
-
-      return a.dueDate.localeCompare(b.dueDate) || a.id - b.id;
-    });
-  }
-
-  if (sort === "priority") {
-    return sortedTodos.sort(compareByPriorityThenCreated);
-  }
-
-  return sortedTodos.sort(compareByPriorityThenCreated);
-}
 
 /**
  * Todo 一覧、追加、完了切り替え、削除、編集、表示フィルタを管理します。
