@@ -424,8 +424,8 @@ export function TodoItem({
         type="button"
         className={
           completed
-            ? "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500 bg-blue-500 text-sm font-bold text-white transition-colors duration-150 ease-out hover:bg-blue-600 active:scale-[0.98] dark:border-blue-400 dark:bg-blue-500 dark:hover:bg-blue-400"
-            : "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-sm font-bold text-blue-600 transition-colors duration-150 ease-out hover:border-blue-400 hover:bg-blue-50 active:scale-[0.98] dark:border-gray-600 dark:text-blue-300 dark:hover:border-blue-400 dark:hover:bg-blue-950"
+            ? "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500 bg-blue-500 text-sm font-bold text-white transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-blue-600 active:scale-[0.98] dark:border-blue-400 dark:bg-blue-500 dark:hover:bg-blue-400"
+            : "mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-sm font-bold text-blue-600 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:border-blue-400 hover:bg-blue-50 active:scale-[0.98] dark:border-gray-600 dark:text-blue-300 dark:hover:border-blue-400 dark:hover:bg-blue-950"
         }
         aria-label={completed ? "未完了に戻す" : "完了にする"}
         aria-pressed={completed}
@@ -434,7 +434,11 @@ export function TodoItem({
         {completed ? "✓" : ""}
       </button>
 
-      <button type="button" className="grid min-w-0 flex-1 gap-2 text-left" onClick={onToggle}>
+      <button
+        type="button"
+        className="grid min-w-0 flex-1 gap-2 rounded-md text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300"
+        onClick={onToggle}
+      >
             <span
               className={
                 completed
@@ -543,7 +547,7 @@ export function TodoItem({
 
       <button
         type="button"
-        className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out hover:bg-blue-50 active:translate-y-px dark:text-blue-300 dark:hover:bg-blue-950"
+        className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-blue-50 active:translate-y-px dark:text-blue-300 dark:hover:bg-blue-950"
         aria-label={`${title}を編集する`}
         aria-haspopup="dialog"
         onClick={startEditing}
@@ -553,7 +557,7 @@ export function TodoItem({
 
       <button
         type="button"
-        className="rounded-md px-3 py-2 text-sm font-semibold text-red-500 transition-colors duration-150 ease-out hover:bg-red-50 hover:text-red-600 active:translate-y-px dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200"
+        className="rounded-md px-3 py-2 text-sm font-semibold text-red-500 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-red-50 hover:text-red-600 active:translate-y-px dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200"
         aria-label={`${title}を削除する`}
         onClick={onDelete}
       >
@@ -577,19 +581,19 @@ export function TodoItem({
                   type="text"
                   value={editingSubtaskTitle}
                   onChange={(event) => setEditingSubtaskTitle(event.target.value)}
-                  className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
+                  className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
                 />
                 <button
                   type="submit"
                   aria-label="サブタスクを保存"
-                  className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out hover:bg-blue-50 active:translate-y-px disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:text-gray-600"
+                  className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-blue-50 active:translate-y-px disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:text-gray-600"
                   disabled={editingSubtaskTitle.trim().length === 0}
                 >
                   保存
                 </button>
                 <button
                   type="button"
-                  className="rounded-md px-3 py-2 text-sm font-semibold text-gray-500 transition-colors duration-150 ease-out hover:bg-gray-100 hover:text-gray-700 active:translate-y-px dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                  className="rounded-md px-3 py-2 text-sm font-semibold text-gray-500 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-gray-100 hover:text-gray-700 active:translate-y-px dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                   onClick={cancelSubtaskEditing}
                 >
                   キャンセル
@@ -599,7 +603,7 @@ export function TodoItem({
               <div key={subtask.id} className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-bold text-blue-600 transition-colors duration-150 ease-out hover:border-blue-400 active:scale-[0.98] dark:border-gray-600 dark:text-blue-300 dark:hover:border-blue-400"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-bold text-blue-600 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:border-blue-400 active:scale-[0.98] dark:border-gray-600 dark:text-blue-300 dark:hover:border-blue-400"
                   aria-label={subtask.completed ? "サブタスクを未完了に戻す" : "サブタスクを完了にする"}
                   aria-pressed={subtask.completed}
                   onClick={() => onToggleSubtask(subtask.id)}
@@ -617,7 +621,7 @@ export function TodoItem({
                 </span>
                 <button
                   type="button"
-                  className="rounded-md px-2 py-1 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out hover:bg-blue-50 active:translate-y-px dark:text-blue-300 dark:hover:bg-blue-950"
+                  className="rounded-md px-2 py-1 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-blue-50 active:translate-y-px dark:text-blue-300 dark:hover:bg-blue-950"
                   aria-label={`${subtask.title}を編集する`}
                   onClick={() => startSubtaskEditing(subtask)}
                 >
@@ -625,7 +629,7 @@ export function TodoItem({
                 </button>
                 <button
                   type="button"
-                  className="rounded-md px-2 py-1 text-sm font-semibold text-red-500 transition-colors duration-150 ease-out hover:bg-red-50 hover:text-red-600 active:translate-y-px dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200"
+                  className="rounded-md px-2 py-1 text-sm font-semibold text-red-500 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-red-50 hover:text-red-600 active:translate-y-px dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200"
                   aria-label={`${subtask.title}を削除する`}
                   onClick={() => onDeleteSubtask(subtask.id)}
                 >
@@ -645,12 +649,12 @@ export function TodoItem({
               value={newSubtaskTitle}
               onChange={(event) => setNewSubtaskTitle(event.target.value)}
               placeholder="サブタスク"
-              className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
+              className="min-w-0 flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
             />
             <button
               type="submit"
               aria-label={`${title}のサブタスクを追加`}
-              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out hover:bg-blue-50 active:translate-y-px disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:text-gray-600"
+              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-blue-50 active:translate-y-px disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:text-gray-600"
               disabled={newSubtaskTitle.trim().length === 0}
             >
               追加
@@ -676,7 +680,7 @@ export function TodoItem({
                 <button
                   type="button"
                   aria-label={`${title}の詳細編集モーダルを閉じる`}
-                  className="rounded-md px-2 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out hover:bg-blue-50 active:translate-y-px dark:text-blue-300 dark:hover:bg-blue-950"
+                  className="rounded-md px-2 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-blue-50 active:translate-y-px dark:text-blue-300 dark:hover:bg-blue-950"
                   onClick={cancelEditing}
                 >
                   閉じる
@@ -713,7 +717,7 @@ export function TodoItem({
                       onChange={(event) => setEditingTitle(event.target.value)}
                       onKeyDown={handleEditTitleKeyDown}
                       placeholder="タイトル"
-                      className="min-w-0 rounded-lg border border-gray-200 bg-white px-4 py-4 text-xl font-semibold text-gray-950 shadow-sm outline-none transition-colors duration-150 ease-out placeholder:text-gray-300 focus:border-blue-400 sm:text-2xl dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:placeholder:text-gray-600 dark:focus:border-blue-500"
+                      className="min-w-0 rounded-lg border border-gray-200 bg-white px-4 py-4 text-xl font-semibold text-gray-950 shadow-sm outline-none transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 placeholder:text-gray-300 focus:border-blue-400 sm:text-2xl dark:border-gray-700 dark:bg-gray-900 dark:text-gray-50 dark:placeholder:text-gray-600 dark:focus:border-blue-500"
                     />
                   </div>
 
@@ -734,7 +738,7 @@ export function TodoItem({
                         onChange={(event) => setEditingMemo(event.target.value)}
                         placeholder="メモを追加"
                         rows={5}
-                        className="min-w-0 w-full resize-y rounded-lg border-0 bg-transparent px-4 py-3 text-sm leading-6 text-gray-900 outline-none placeholder:text-gray-400 dark:text-gray-100 dark:placeholder:text-gray-500"
+                        className="min-w-0 w-full resize-y rounded-lg border-0 bg-transparent px-4 py-3 text-sm leading-6 text-gray-900 outline-none placeholder:text-gray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus-visible:outline-blue-300"
                       />
                     </div>
                   </section>
@@ -758,7 +762,7 @@ export function TodoItem({
                           type="date"
                           value={editingDueDate}
                           onChange={(event) => setEditingDueDate(event.target.value)}
-                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
+                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
                         />
                       </div>
                       <div className="grid gap-3 border-b border-gray-100 px-4 py-3 sm:grid-cols-[8rem_1fr] sm:items-center dark:border-gray-800">
@@ -771,7 +775,7 @@ export function TodoItem({
                           aria-label="Todo 優先度を編集"
                           value={editingPriority}
                           onChange={(event) => setEditingPriority(event.target.value as TodoPriority)}
-                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
+                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
                         >
                           {priorityOptions.map((priorityOption) => (
                             <option key={priorityOption.value} value={priorityOption.value}>
@@ -790,7 +794,7 @@ export function TodoItem({
                           aria-label={`${title}の繰り返し設定を変更`}
                           value={editingRepeat}
                           onChange={(event) => setEditingRepeat(event.target.value as TodoRepeat)}
-                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
+                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
                         >
                           {repeatOptions.map((repeatOption) => (
                             <option key={repeatOption.value} value={repeatOption.value}>
@@ -811,7 +815,7 @@ export function TodoItem({
                           value={editingTags}
                           onChange={(event) => setEditingTags(event.target.value)}
                           placeholder="タグをカンマ区切りで入力"
-                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
+                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
                         />
                       </div>
                     </div>
@@ -837,8 +841,8 @@ export function TodoItem({
                               type="button"
                               className={
                                 subtask.completed
-                                  ? "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500 bg-blue-500 text-xs font-bold text-white transition-colors duration-150 ease-out hover:bg-blue-600 active:scale-[0.98] dark:border-blue-400 dark:bg-blue-500 dark:hover:bg-blue-400"
-                                  : "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-bold text-blue-600 transition-colors duration-150 ease-out hover:border-blue-400 hover:bg-blue-50 active:scale-[0.98] dark:border-gray-600 dark:text-blue-300 dark:hover:border-blue-400 dark:hover:bg-blue-950"
+                                  ? "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-blue-500 bg-blue-500 text-xs font-bold text-white transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-blue-600 active:scale-[0.98] dark:border-blue-400 dark:bg-blue-500 dark:hover:bg-blue-400"
+                                  : "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gray-300 text-xs font-bold text-blue-600 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:border-blue-400 hover:bg-blue-50 active:scale-[0.98] dark:border-gray-600 dark:text-blue-300 dark:hover:border-blue-400 dark:hover:bg-blue-950"
                               }
                               aria-label={subtask.completed ? "サブタスクを未完了に戻す" : "サブタスクを完了にする"}
                               aria-pressed={subtask.completed}
@@ -856,13 +860,13 @@ export function TodoItem({
                               onChange={(event) => updateEditingSubtaskTitle(subtask.id, event.target.value)}
                               className={
                                 subtask.completed
-                                  ? "min-w-0 rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm text-gray-400 line-through outline-none transition-colors duration-150 ease-out focus:border-blue-400 dark:bg-gray-950 dark:text-gray-500 dark:focus:border-blue-500"
-                                  : "min-w-0 rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
+                                  ? "min-w-0 rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm text-gray-400 line-through outline-none transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 focus:border-blue-400 dark:bg-gray-950 dark:text-gray-500 dark:focus:border-blue-500"
+                                  : "min-w-0 rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 focus:border-blue-400 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
                               }
                             />
                             <button
                               type="button"
-                              className="rounded-md px-3 py-2 text-sm font-semibold text-red-500 transition-colors duration-150 ease-out hover:bg-red-50 hover:text-red-600 active:translate-y-px dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200"
+                              className="rounded-md px-3 py-2 text-sm font-semibold text-red-500 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-red-50 hover:text-red-600 active:translate-y-px dark:text-red-300 dark:hover:bg-red-950 dark:hover:text-red-200"
                               aria-label={`${subtask.title}を削除する`}
                               onClick={() => deleteEditingSubtask(subtask.id)}
                             >
@@ -886,12 +890,12 @@ export function TodoItem({
                           onChange={(event) => setNewEditingSubtaskTitle(event.target.value)}
                           onKeyDown={handleNewEditingSubtaskKeyDown}
                           placeholder="新しいサブタスク"
-                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
+                          className="min-w-0 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
                         />
                         <button
                           type="button"
                           aria-label={`${title}のサブタスクを追加`}
-                          className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out hover:bg-blue-50 active:translate-y-px disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:text-gray-600"
+                          className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-blue-50 active:translate-y-px disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:text-gray-600"
                           disabled={newEditingSubtaskTitle.trim().length === 0}
                           onClick={addEditingSubtask}
                         >
@@ -907,7 +911,7 @@ export function TodoItem({
                 <button
                   type="button"
                   aria-label="キャンセル"
-                  className="rounded-md px-4 py-3 text-sm font-semibold text-gray-600 transition-colors duration-150 ease-out hover:bg-gray-100 hover:text-gray-800 active:translate-y-px sm:py-2 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                  className="rounded-md px-4 py-3 text-sm font-semibold text-gray-600 transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-gray-100 hover:text-gray-800 active:translate-y-px sm:py-2 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100"
                   onClick={cancelEditing}
                 >
                   キャンセル
@@ -915,7 +919,7 @@ export function TodoItem({
                 <button
                   type="submit"
                   aria-label="Todoを保存"
-                  className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-colors duration-150 ease-out hover:bg-blue-700 active:translate-y-px disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 sm:py-2 dark:bg-blue-500 dark:hover:bg-blue-400 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
+                  className="rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-colors duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:focus-visible:outline-blue-300 hover:bg-blue-700 active:translate-y-px disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 sm:py-2 dark:bg-blue-500 dark:hover:bg-blue-400 dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
                   disabled={trimmedEditingTitle.length === 0}
                 >
                   保存

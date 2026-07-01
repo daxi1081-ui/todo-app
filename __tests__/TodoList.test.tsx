@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test } from "vitest";
 
 import { TodoList } from "../app/components/TodoList";
@@ -540,6 +541,32 @@ test("Todo追加フォームの詳細項目を開閉できる", () => {
   expect(screen.getByRole("button", { name: "Todo追加の詳細を表示" }).getAttribute("aria-expanded")).toBe(
     "false",
   );
+});
+
+test("Tab キーで主要な追加フォーム操作へフォーカス移動できる", async () => {
+  const user = userEvent.setup();
+
+  render(<TodoList todos={todos} />);
+
+  const titleInput = screen.getByLabelText("追加する Todo");
+
+  titleInput.focus();
+  expect(document.activeElement).toBe(titleInput);
+
+  await user.type(titleInput, "Tab focus");
+
+  await user.tab();
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Todo追加の詳細を表示" }));
+
+  await user.tab();
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Todoを追加" }));
+
+  await user.click(screen.getByRole("button", { name: "Todo追加の詳細を表示" }));
+  screen.getByLabelText("追加する Todo メモ").focus();
+  expect(document.activeElement).toBe(screen.getByLabelText("追加する Todo メモ"));
+
+  await user.tab();
+  expect(document.activeElement).toBe(screen.getByLabelText("追加する Todo 期限日"));
 });
 
 test("詳細項目を閉じた状態でTodoを追加できる", () => {
@@ -1166,16 +1193,48 @@ test("repeatがない古いlocalStorageデータでも画面が壊れない", as
   });
 });
 
-test("Todo 追加時に Enter キーで追加できる", () => {
+test("Todo 追加時に Enter キーで追加できる", async () => {
+  const user = userEvent.setup();
+
   render(<TodoList todos={todos} />);
 
   const input = screen.getByLabelText("追加する Todo") as HTMLInputElement;
 
-  fireEvent.change(input, { target: { value: "日記を書く" } });
-  fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+  await user.type(input, "日記を書く");
+  await user.keyboard("{Enter}");
 
   expect(screen.getByText("日記を書く")).toBeDefined();
   expect(input.value).toBe("");
+});
+
+test("Todo 追加フォームで Esc キーを押すと入力内容をクリアできる", async () => {
+  const user = userEvent.setup();
+
+  render(<TodoList todos={todos} />);
+
+  const titleInput = screen.getByLabelText("追加する Todo") as HTMLInputElement;
+  const memoInput = screen.getByLabelText("追加する Todo メモ") as HTMLTextAreaElement;
+  const dueDateInput = screen.getByLabelText("追加する Todo 期限日") as HTMLInputElement;
+  const priorityInput = screen.getByLabelText("追加する Todo 優先度") as HTMLSelectElement;
+  const repeatInput = screen.getByLabelText("Todoの繰り返し設定") as HTMLSelectElement;
+  const tagsInput = screen.getByLabelText("追加する Todo タグ") as HTMLInputElement;
+
+  await user.click(screen.getByRole("button", { name: "Todo追加の詳細を表示" }));
+  await user.type(titleInput, "クリアする Todo");
+  await user.type(memoInput, "消えるメモ");
+  fireEvent.change(dueDateInput, { target: { value: today } });
+  await user.selectOptions(priorityInput, "high");
+  await user.selectOptions(repeatInput, "daily");
+  await user.type(tagsInput, "消えるタグ");
+  await user.keyboard("{Escape}");
+
+  expect(titleInput.value).toBe("");
+  expect(memoInput.value).toBe("");
+  expect(dueDateInput.value).toBe("");
+  expect(priorityInput.value).toBe("none");
+  expect(repeatInput.value).toBe("none");
+  expect(tagsInput.value).toBe("");
+  expect(screen.queryByText("クリアする Todo")).toBeNull();
 });
 
 test("空文字では Todo を追加できない", () => {
@@ -1710,16 +1769,20 @@ test("Todo 編集時に Enter キーで保存できる", () => {
   expect(screen.queryByText("筋トレ")).toBeNull();
 });
 
-test("Todo 編集時に Esc キーでキャンセルできる", () => {
+test("Todo 編集モーダルで Esc キーを押すと未保存変更を破棄して閉じられる", async () => {
+  const user = userEvent.setup();
+
   render(<TodoList todos={todos} />);
 
-  fireEvent.click(screen.getByRole("button", { name: "筋トレを編集する" }));
+  await user.click(screen.getByRole("button", { name: "筋トレを編集する" }));
 
-  const input = screen.getByLabelText("Todo タイトルを編集");
+  const input = screen.getByLabelText("Todo タイトルを編集") as HTMLInputElement;
 
-  fireEvent.change(input, { target: { value: "夜の筋トレ" } });
-  fireEvent.keyDown(input, { key: "Escape", code: "Escape" });
+  await user.clear(input);
+  await user.type(input, "夜の筋トレ");
+  await user.keyboard("{Escape}");
 
+  expect(screen.queryByRole("dialog", { name: "詳細" })).toBeNull();
   expect(screen.getByText("筋トレ")).toBeDefined();
   expect(screen.queryByText("夜の筋トレ")).toBeNull();
 });

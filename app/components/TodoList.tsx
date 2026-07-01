@@ -280,6 +280,18 @@ export function TodoList({ todos }: TodoListProps) {
   }
 
   /**
+   * Todo 追加フォームの入力内容を初期状態へ戻します。
+   */
+  function clearNewTodoForm() {
+    setNewTodoTitle("");
+    setNewTodoMemo("");
+    setNewTodoDueDate("");
+    setNewTodoPriority("none");
+    setNewTodoRepeat("none");
+    setNewTodoTags("");
+  }
+
+  /**
    * 追加入力中の Enter キー入力で Todo を追加します。
    *
    * @param event キーボード入力イベント。
@@ -289,6 +301,20 @@ export function TodoList({ todos }: TodoListProps) {
       event.preventDefault();
       event.currentTarget.form?.requestSubmit();
     }
+  }
+
+  /**
+   * Todo 追加フォーム内の Esc キー入力で入力内容を破棄します。
+   *
+   * @param event キーボード入力イベント。
+   */
+  function handleNewTodoFormKeyDown(event: KeyboardEvent<HTMLFormElement>) {
+    if (event.key !== "Escape") {
+      return;
+    }
+
+    event.preventDefault();
+    clearNewTodoForm();
   }
 
   /**
@@ -447,7 +473,7 @@ export function TodoList({ todos }: TodoListProps) {
           type="button"
           aria-label={isDarkTheme ? "ライトモードに切り替える" : "ダークモードに切り替える"}
           aria-pressed={isDarkTheme}
-          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors duration-150 ease-out hover:border-blue-200 hover:text-gray-950 active:translate-y-px dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-blue-500 dark:hover:text-white"
+          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors duration-150 ease-out hover:border-blue-200 hover:text-gray-950 active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-blue-500 dark:hover:text-white dark:focus-visible:outline-blue-300"
           onClick={toggleTheme}
         >
           <span aria-hidden="true">{isDarkTheme ? "☀" : "☾"}</span>
@@ -465,8 +491,8 @@ export function TodoList({ todos }: TodoListProps) {
               type="button"
               className={
                 isSelected
-                  ? "rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 ease-out active:translate-y-px dark:bg-gray-100 dark:text-gray-950"
-                  : "rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition-colors duration-150 ease-out hover:text-gray-900 active:translate-y-px dark:bg-gray-900 dark:text-gray-300 dark:hover:text-white"
+                  ? "rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 ease-out active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-gray-100 dark:text-gray-950 dark:focus-visible:outline-blue-300"
+                  : "rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm transition-colors duration-150 ease-out hover:text-gray-900 active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-gray-900 dark:text-gray-300 dark:hover:text-white dark:focus-visible:outline-blue-300"
               }
               aria-pressed={isSelected}
               onClick={() => setSelectedFilter(filter.value)}
@@ -486,7 +512,7 @@ export function TodoList({ todos }: TodoListProps) {
             aria-label={
               isControlMenuOpen ? "絞り込み・並び替えメニューを閉じる" : "絞り込み・並び替えメニューを開く"
             }
-            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors duration-150 ease-out hover:text-gray-900 active:translate-y-px dark:bg-gray-900 dark:text-gray-300 dark:hover:text-white"
+            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors duration-150 ease-out hover:text-gray-900 active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:bg-gray-900 dark:text-gray-300 dark:hover:text-white dark:focus-visible:outline-blue-300"
             onClick={() => setIsControlMenuOpen((isOpen) => !isOpen)}
           >
             絞り込み・並び替え
@@ -517,7 +543,7 @@ export function TodoList({ todos }: TodoListProps) {
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
           placeholder="検索"
-          className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
+          className="min-w-0 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500 dark:focus-visible:outline-blue-300"
         />
         <label htmlFor="todo-sort" className="sr-only">
           Todo 並び替え
@@ -526,7 +552,7 @@ export function TodoList({ todos }: TodoListProps) {
           id="todo-sort"
           value={selectedSort}
           onChange={(event) => changeSort(event.target.value as TodoSort)}
-          className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm outline-none transition-colors duration-150 ease-out focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
+          className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm outline-none transition-colors duration-150 ease-out focus:border-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500 dark:focus-visible:outline-blue-300"
         >
           {sortOptions.map((sort) => (
             <option key={sort.value} value={sort.value}>
@@ -613,7 +639,11 @@ export function TodoList({ todos }: TodoListProps) {
         })}
       </div>
 
-      <form onSubmit={addTodo} className="mt-6 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+      <form
+        onSubmit={addTodo}
+        onKeyDown={handleNewTodoFormKeyDown}
+        className="mt-6 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900"
+      >
         <label htmlFor="new-todo-title" className="sr-only">
           追加する Todo
         </label>
@@ -625,7 +655,7 @@ export function TodoList({ todos }: TodoListProps) {
             onChange={(event) => setNewTodoTitle(event.target.value)}
             onKeyDown={handleNewTodoKeyDown}
             placeholder="新しい Todo"
-            className="min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
+            className="min-w-0 flex-1 rounded-md border border-gray-200 bg-white px-4 py-3 text-base text-gray-900 outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500 dark:focus-visible:outline-blue-300"
           />
           <div className="flex flex-wrap items-center justify-between gap-2">
             <button
@@ -633,7 +663,7 @@ export function TodoList({ todos }: TodoListProps) {
               aria-expanded={isNewTodoDetailsOpen}
               aria-controls="new-todo-details"
               aria-label={isNewTodoDetailsOpen ? "Todo追加の詳細を隠す" : "Todo追加の詳細を表示"}
-              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out hover:bg-blue-50 active:translate-y-px dark:text-blue-300 dark:hover:bg-blue-950"
+              className="rounded-md px-3 py-2 text-sm font-semibold text-blue-600 transition-colors duration-150 ease-out hover:bg-blue-50 active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:text-blue-300 dark:hover:bg-blue-950 dark:focus-visible:outline-blue-300"
               onClick={() => setIsNewTodoDetailsOpen((isOpen) => !isOpen)}
             >
               {isNewTodoDetailsOpen ? "詳細を隠す" : "詳細を表示"}
@@ -650,7 +680,7 @@ export function TodoList({ todos }: TodoListProps) {
               onChange={(event) => setNewTodoMemo(event.target.value)}
               placeholder="メモ"
               rows={3}
-              className="min-w-0 resize-y rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
+              className="min-w-0 resize-y rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500 dark:focus-visible:outline-blue-300"
             />
             <label htmlFor="new-todo-due-date" className="sr-only">
               追加する Todo 期限日
@@ -660,7 +690,7 @@ export function TodoList({ todos }: TodoListProps) {
               type="date"
               value={newTodoDueDate}
               onChange={(event) => setNewTodoDueDate(event.target.value)}
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500 dark:focus-visible:outline-blue-300"
             />
             <label htmlFor="new-todo-priority" className="sr-only">
               追加する Todo 優先度
@@ -669,7 +699,7 @@ export function TodoList({ todos }: TodoListProps) {
               id="new-todo-priority"
               value={newTodoPriority}
               onChange={(event) => setNewTodoPriority(event.target.value as TodoPriority)}
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500 dark:focus-visible:outline-blue-300"
             >
               {priorityOptions.map((priority) => (
                 <option key={priority.value} value={priority.value}>
@@ -685,7 +715,7 @@ export function TodoList({ todos }: TodoListProps) {
               aria-label="Todoの繰り返し設定"
               value={newTodoRepeat}
               onChange={(event) => setNewTodoRepeat(event.target.value as TodoRepeat)}
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500"
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition-colors duration-150 ease-out focus:border-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:focus:border-blue-500 dark:focus-visible:outline-blue-300"
             >
               {repeatOptions.map((repeat) => (
                 <option key={repeat.value} value={repeat.value}>
@@ -702,7 +732,7 @@ export function TodoList({ todos }: TodoListProps) {
               value={newTodoTags}
               onChange={(event) => setNewTodoTags(event.target.value)}
               placeholder="タグ（カンマ区切り）"
-              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500"
+              className="min-w-0 rounded-md border border-gray-200 bg-white px-4 py-3 text-gray-900 outline-none transition-colors duration-150 ease-out placeholder:text-gray-400 focus:border-blue-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-500 dark:focus-visible:outline-blue-300"
             />
           </div>
         </div>
